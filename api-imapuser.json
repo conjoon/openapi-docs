@@ -1,0 +1,76 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "version": "0.1",
+        "title": "conjoon/api-imapuser",
+        "license": {
+            "name": "MIT"
+        }
+    },
+    "servers": [
+        {
+            "url": "/"
+        }
+    ],
+    "paths": {
+        "/auth": {
+            "post": {
+                "summary": "Authentication of a single user against an IMAP server to retrieve a single IMAP account associated with this user. The IMAP server itself must be provided by the implementing middleware, e.g. by inspecting the username/email-address, matching it against a predefined IMAP configuration.",
+                "operationId": "auth",
+                "requestBody": {
+                    "content" : "application/x-www-form-urlencoded",
+                    "schema" : {
+                        "type": "object",
+                        "properties": {
+                            "username" : {
+                                "type" : "string"
+                            },
+                            "password":{
+                                "type" : "string"
+                            }
+                        },
+                        "required" : [
+                            "username", "password"
+                        ]
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Valid User",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "$ref": "#/components/schemas/imapUser"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "imapUser": {
+                "type": "object",
+                "properties": {
+                    "username": {
+                        "type": "string"
+                    },
+                    "password": {
+                        "type": "string"
+                    }
+                }
+            }
+        }
+    }
+}
