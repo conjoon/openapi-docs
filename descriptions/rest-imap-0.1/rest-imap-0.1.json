@@ -8,10 +8,20 @@
         }
     },
     "servers": [
-        {
-            "url": "/"
+    {
+      "url": "{protocol}://{hostname}/rest-imap/api/v0.1",
+      "variables": {
+        "hostname": {
+          "description": "Self-hosted Server",
+          "default": "HOSTNAME"
+        },
+        "protocol": {
+          "description": "Self-hostedServer protocol",
+          "default": "https"
         }
-    ],
+      }
+    }
+  ],
     "paths": {
         "/MailAccounts": {
             "get": {
