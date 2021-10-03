@@ -5,59 +5,89 @@
         "title": "conjoon/rest-imapuser",
         "license": {
             "name": "MIT"
-        }
+        },
+        "description": "This REST API describes the endpoints for authentication of a single user."
     },
     "servers": [
-    {
-      "url": "{protocol}://{hostname}/rest-imapuser/api/v0.1",
-      "variables": {
-        "hostname": {
-          "description": "Self-hosted Server",
-          "default": "HOSTNAME"
-        },
-        "protocol": {
-          "description": "Self-hostedServer protocol",
-          "default": "https"
+        {
+            "url": "{protocol}://{hostname}/rest-imapuser/api/v0.1",
+            "variables": {
+                "hostname": {
+                    "description": "Self-hosted Server",
+                    "default": "HOSTNAME"
+                },
+                "protocol": {
+                    "description": "Self-hostedServer protocol",
+                    "default": "https"
+                }
+            }
         }
-      }
-    }
-  ],
+    ],
     "paths": {
         "/auth": {
             "post": {
-                "summary": "Authentication of a single user against an IMAP server to retrieve a single IMAP account associated with this user. The IMAP server itself must be provided by the implementing middleware, e.g. by inspecting the username/email-address, matching it against a predefined IMAP configuration.",
+                "summary": "Authentication of a user.",
                 "operationId": "auth",
                 "requestBody": {
-                    "content" : "application/x-www-form-urlencoded",
-                    "schema" : {
-                        "type": "object",
-                        "properties": {
-                            "username" : {
-                                "type" : "string"
-                            },
-                            "password":{
-                                "type" : "string"
+                    "content": {
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "username": {
+                                        "type": "string"
+                                    },
+                                    "password": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "username",
+                                    "password"
+                                ]
                             }
-                        },
-                        "required" : [
-                            "username", "password"
-                        ]
+                        }
                     }
                 },
                 "responses": {
                     "200": {
-                        "description": "Valid User",
+                        "description": "Success",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
                                         "success": {
-                                            "type": "boolean"
+                                            "type": "boolean",
+                                            "default": true,
+                                            "description": "The result of the operation, in this case defaulting to \"true\"."
                                         },
                                         "data": {
-                                            "type": "object",
-                                            "$ref": "#/components/schemas/imapUser"
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/imapUser"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized. The \"msg\"-property can contain extended information why authentication failed.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "default": "false",
+                                            "description": "The result of the operation, in this case defaulting to \"false\"."
+                                        },
+                                        "msg": {
+                                            "description": "Additional information describing why authentication failed.",
+                                            "type": "string"
                                         }
                                     }
                                 }
