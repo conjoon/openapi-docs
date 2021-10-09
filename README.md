@@ -1,6 +1,6 @@
 # conjoon's REST API OpenAPI Description
 
-This repository contains [OpenAPI](https://www.openapis.org/) descriptions for the REST API used in the conjoon project.
+This repository contains [OpenAPI](https://www.openapis.org/) descriptions for the REST API used in the **conjoon**-project.
 
 ## What is OpenAPI?
 
