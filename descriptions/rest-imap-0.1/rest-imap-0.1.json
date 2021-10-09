@@ -1,11 +1,17 @@
 {
     "openapi": "3.0.0",
     "info": {
+        "contact": {
+            "name": "conjoon Open Source Project",
+            "url": "http://conjoon.org",
+            "email": "thorsten@suckow-homberg.de"
+        },
         "version": "0.1",
         "title": "conjoon/rest-imap",
         "license": {
             "name": "MIT"
-        }
+        },
+        "description": "API specifications for accessing IMAP servers"
     },
     "servers": [
         {
@@ -25,7 +31,11 @@
     "paths": {
         "/MailAccounts": {
             "get": {
-                "summary": "Lists available mail accounts for the specified login",
+                "tags": [
+                    "MailAccounts"
+                ],
+                "summary": "Lists mail accounts",
+                "description": "Lists available mail accounts for the specified login",
                 "operationId": "mailAccounts",
                 "responses": {
                     "200": {
@@ -41,7 +51,6 @@
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "type": "object",
                                                 "$ref": "#/components/schemas/MailAccount"
                                             }
                                         }
@@ -55,7 +64,11 @@
         },
         "/MailAccounts/{mailAccountId}/MailFolders": {
             "get": {
-                "summary": "Returns all available mail boxes belonging to a specific mail account",
+                "tags": [
+                    "MailFolders"
+                ],
+                "summary": "List mail boxes",
+                "description": "Returns all available mail boxes belonging to a specific mail account",
                 "operationId": "mailFolders",
                 "parameters": [
                     {
@@ -76,7 +89,6 @@
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "type": "object",
                                                 "$ref": "#/components/schemas/MailFolder"
                                             }
                                         }
@@ -90,8 +102,11 @@
         },
         "/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId}/MessageItems": {
             "get": {
+                "tags": [
+                    "MessageItems"
+                ],
                 "summary": "Returns a list of MessageItems",
-                "description": "Returns a list of all MessageItems for the MailAccount with the specified `mailAccountId` found in the mailbox with the id `mailFolderId`. Failed attempts to retrieve this list should return appropriate http Status-Code. This response returns a list of MessageItems in the boundaries of `start` and `start + limit`; meta-information in the response need to contain the current number of unread messages in the queried mailbox along with the mailbox's identifier (`mailFolderId`) and the associated account (`mailAccountId`) itself.",
+                "description": "Returns a list of all MessageItems for the MailAccount with the specified `mailAccountId` found in the mailbox with the id `mailFolderId`. Failed attempts to retrieve this list should return appropriate http Status-Code. This response returns a list of MessageItems in the boundaries of `start` and `start + limit`; meta-information in the response need to contain the current number of unread messages in the queried mailbox along with the mailbox's identifier (`mailFolderId`) and the associated account (`mailAccountId`) itself. The parameters `fields` and `excludeFields` are mutually exclusive.",
                 "operationId": "getMessageItems",
                 "parameters": [
                     {
@@ -127,6 +142,22 @@
                                 "DESC"
                             ]
                         }
+                    },
+                    {
+                        "schema": {
+                            "type": "array"
+                        },
+                        "in": "query",
+                        "name": "fields",
+                        "description": "The list of fields to retrieve for the message item. Will return all fields if omitted."
+                    },
+                    {
+                        "schema": {
+                            "type": "array"
+                        },
+                        "in": "query",
+                        "name": "excludeFields",
+                        "description": "An array of fields to exclude from the response. "
                     }
                 ],
                 "responses": {
@@ -158,7 +189,6 @@
                                             }
                                         },
                                         "data": {
-                                            "type": "object",
                                             "$ref": "#/components/schemas/MessageItem"
                                         }
                                     }
@@ -169,7 +199,11 @@
                 }
             },
             "post": {
-                "summary": "Creates a new draft for the specified MailAccount and stores it in the MailBox with the specified mailFolderId",
+                "tags": [
+                    "MessageDraft"
+                ],
+                "summary": "Creates a new draft",
+                "description": "Creates a new draft for the specified MailAccount and stores it in the MailBox with the specified mailFolderId",
                 "operationId": "postMessageBodyDraft",
                 "parameters": [
                     {
@@ -202,7 +236,6 @@
                                             "type": "boolean"
                                         },
                                         "data": {
-                                            "type": "object",
                                             "$ref": "#/components/schemas/MessageBodyDraft"
                                         }
                                     }
@@ -215,7 +248,11 @@
         },
         "/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId}/MessageItems/{messageItemId}&target=MessageBody": {
             "get": {
-                "summary": "Returns the MessageBody for the specified key fragments",
+                "tags": [
+                    "MessageBody"
+                ],
+                "summary": "Return message body",
+                "description": "Returns the MessageBody for the specified key fragments",
                 "operationId": "getMessageBody",
                 "parameters": [
                     {
@@ -240,7 +277,6 @@
                                             "type": "boolean"
                                         },
                                         "data": {
-                                            "type": "object",
                                             "$ref": "#/components/schemas/MessageBody"
                                         }
                                     }
@@ -253,7 +289,11 @@
         },
         "/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId}/MessageItems/{messageItemId}&target=MessageItem": {
             "get": {
-                "summary": "Returns the MessageItem for the specified key fragments",
+                "tags": [
+                    "MessageItem"
+                ],
+                "summary": "Return message item",
+                "description": "Returns the MessageItem for the specified key fragments",
                 "operationId": "getMessageItem",
                 "parameters": [
                     {
@@ -278,7 +318,6 @@
                                             "type": "boolean"
                                         },
                                         "data": {
-                                            "type": "object",
                                             "$ref": "#/components/schemas/MessageItem"
                                         }
                                     }
@@ -289,7 +328,11 @@
                 }
             },
             "put": {
-                "summary": "Updates the specific MessageItem with the submitted information.",
+                "tags": [
+                    "MessageItem"
+                ],
+                "summary": "Updates MessageItem",
+                "description": "Updates the specific MessageItem with the submitted information.",
                 "operationId": "putMessageItem",
                 "parameters": [
                     {
@@ -384,6 +427,32 @@
             }
         }
     },
+    "tags": [
+        {
+            "name": "MailAccounts",
+            "description": "Endpoints related to reading MailAccounts"
+        },
+        {
+            "name": "MessageDraft",
+            "description": "Endpoints related to reading/writing MessageDrafts"
+        },
+        {
+            "name": "MessageItems",
+            "description": "Endpoints related to receiving lists of MessageItems"
+        },
+        {
+            "name": "MessageItem",
+            "description": "Endpoints related to reading/writing a single MessageItem"
+        },
+        {
+            "name": "MessageBody",
+            "description": "Endpoints related to reading/writing a single MessageBody"
+        },
+        {
+            "name": "MailFolders",
+            "description": "Endpoints related to reading MailFolders"
+        }
+    ],
     "components": {
         "parameters": {
             "mailAccountId": {
@@ -436,7 +505,6 @@
                     "data": {
                         "type": "array",
                         "items": {
-                            "type": "object",
                             "$ref": "#/components/schemas/MailFolder"
                         }
                     }
@@ -531,9 +599,9 @@
                 "allOf": [
                     {
                         "$ref": "#/components/schemas/compoundKey"
-                    }
+                    },
+                    {}
                 ],
-                "type": "object",
                 "properties": {
                     "date": {
                         "type": "object"
@@ -584,6 +652,32 @@
                     },
                     "cn_moved": {
                         "type": "boolean"
+                    }
+                },
+                "type": "object",
+                "x-examples": {
+                    "example-1": {
+                        "date": {},
+                        "from": "string",
+                        "seen": true,
+                        "answered": true,
+                        "flagged": true,
+                        "draft": true,
+                        "recent": true,
+                        "hasAttachments": true,
+                        "to": [
+                            {
+                                "name": "string",
+                                "address": "string"
+                            }
+                        ],
+                        "previewText": "string",
+                        "size": 0,
+                        "cn_deleted": true,
+                        "cn_moved": true,
+                        "id": "string",
+                        "mailAccountId": "string",
+                        "mailFolderId": "string"
                     }
                 }
             },
