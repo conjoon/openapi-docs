@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2020 Thorsten Suckow-Homberg https://github.com/conjoon/rest-api-description
+Copyright (c) 2021 Thorsten Suckow-Homberg https://github.com/conjoon/rest-api-description
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
