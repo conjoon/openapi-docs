@@ -108,7 +108,7 @@
                     "MessageItems"
                 ],
                 "summary": "Get a list of ListMessageItems",
-                "description": "Returns a list of all `ListMessageItem`s for the MailAccount with the specified `mailAccountId` and `mailFolderId`. This response returns a list of `ListMessageItem` in the boundaries of `start` and `start + limit`; meta-information in the response need to contain the current number of unread messages in the queried mailbox along with the mailbox's identifier (`mailFolderId`) and the associated account (`mailAccountId`) itself. \n<br>\n**The fields `mailFolderId`, `mailAccountId` and `id` must always be available with the response, for each returned entity.**\n\n### Query Parameters\n\n### `limit`\nA client must explicitly set `limit` to -1 if **ALL** items should be returned. `limit` is only considered if `ids` is omitted.\n\n### `attributes`\n\nAllows to define the attributes to return with a MessageItem. Defaults to `*` which means all attributes of a `ListMessageItem` are included.\nTo exclude attributes, append a comma-separated list with the names of attributes to exclude:\n\n**Example:** _All attributes are included (default)_\n```\n?attributes=* \n```\n\n**Example:** _Only `previewText` will be included in the set of attributes_\n```\n?attributes=previewText \n```\n\n**Example:** _`subject` and `previewText` will not be included in the set of attributes_\n```\n?attributes=*,previewText,subject \n```\n\n### `options`\n\nA **json-encoded** string providing additional options for the attributes.\n\n- `previewText`\n    <br>The `previewText`-attribute **MUST** be allowed to be configured with:\n           <br> - `length` this allows to specify the length of the `previewText` to return\n    <br>The `previewText`-attribute **MUST NOT**, but **SHOULD**,  be allowed to be configured with:\n           <br> - `trimApi` if `length` is specified, `trimApi` requests the implementing backend to read out the complete text before trimming it. This can prevent charset decoding issues, but increases load-times (defaults to `false`).\n           <br> apply options to `html`/`plain`: If the backend supports it, the client should be able to chose which content type of the message should be previewed. The option `precedence` should be submitted to tell which content type should be preferred. A lookup for the other content type is then skipped. \n           <br>(The following examples use json-decoded data for demonstration purposes.)\n    \n    **Example:** _Preview Text is returned with a max. of 200 characters._\n    ```\n    ?options={previewText: {length:200}} \n    ```\n    **Example:** _Preview Text is returned with a max. of 200 characters, trimming should be done by the backend._\n    ```\n    ?options={previewText: {length:200, trimApi: true}} \n    ```\n    **Example:** _Preview Text configured to first look up content type `plain`, then content type `html` to generate the previewText:_\n    ```\n    ?options={previewText: {plain: {length: 200, trimApi: true, precedence: true}}, {html: {length: 200, trimApi: true}} \n    ``` \n    \n    If `plain` and `html` are omitted, the options configured for `previewText` should be internally get applied to both content types.\n    **Default**: The `previewText`s default setting should be, if nothing else specified:\n    ```json\n      previewText: {\n        plain: {\n            precedence: true,\n            length: 200,\n            trimApi: true\n        },\n        html: {\n            length: 200,\n            trimApi: true\n        }\n    }\n    ```\n    \n##### Ignored Options\nif an attribute is excluded, any value found in `options` referring to it will be ignored.\n\n### Mutually Exclusives\nThe parameter-group `limit`/`start` and `ids` are mutually exclusive. If `ids` is specified, `limit` and or `start` must not be present\n\n```\n?limit=50&start=100\n?limit=50&start=100&ids=4,554,221 // HTTP Status 400\n```\n\n ",
+                "description": "Returns a list of all `ListMessageItem`s for the MailAccount with the specified `mailAccountId` and `mailFolderId`. This response returns a list of `ListMessageItem` in the boundaries of `start` and `start + limit`; meta-information in the response need to contain the current number of unread messages in the queried mailbox along with the mailbox's identifier (`mailFolderId`) and the associated account (`mailAccountId`) itself. \n<br>\n**The fields `mailFolderId`, `mailAccountId` and `id` must always be available with the response, for each returned entity.**\n\n### Query Parameters\n\n### `limit`\nA client must explicitly set `limit` to -1 if **ALL** items should be returned. `limit` is only considered if `ids` is omitted.\n\n### `attributes`\n\nAllows to define the attributes to return with a MessageItem. Defaults to `*` which means all attributes of a `ListMessageItem` are included.\nTo exclude attributes, append a comma-separated list with the names of attributes to exclude:\n\n**Example:** _All attributes are included (default)_\n```\n?attributes=* \n```\n\n**Example:** _Only `previewText` will be included in the set of attributes_\n```\n?attributes=previewText \n```\n\n**Example:** _`subject` and `previewText` will not be included in the set of attributes_\n```\n?attributes=*,previewText,subject \n```\n\n### `filter`\n\nA **json-encoded** string providing additional filter to consider. Must be an array of filter-objects. Multiple filter objects are considered as logical `OR` conditionals.\nIf the server does not understand the filter, a 400-response **MUST** be returned.\nTo group `filter` as logical `AND`, use Arrays of Arrays.\n\n\n#### Filter configuration\n- `property`\n    <br>The `property`-key **SHOULD** be an attribute the server understands.\n- `value`\n    <br>The `value`-key **SHOULD** be a a value for the `property`. The format is arbitrary.\n- `operator`\n    <br>The `operator`-key **SHOULD** be the operator that is used for comparing a list of data with the `property`s `value`. The default operator used is `=`\n         <br>(The following examples use json-decoded data for demonstration purposes.)\n         <br>\n    **Example:** _Getting messages flagged as `recent`._\n    ```\n    ?filter=[{\"property\": \"recent\", \"value\": true}]\n    ```\n   <br>\n    **Example:** _Getting messages flagged as `recent`, **OR** messages flagged as `unseen` with an `uid` greater than 1657._\n    ```\n    ?filter=[{\"property\": \"recent\", \"value\": true}, [{\"property\": \"unseen\", \"value\": true}, {\"property\": \"uid\", \"value\": 1657, \"operator\": \">\"}]]\n    ```\n\n\n### `options`\n\nA **json-encoded** string providing additional options for the attributes.\n\n- `previewText`\n    <br>The `previewText`-attribute **MUST** be allowed to be configured with:\n           <br> - `length` this allows to specify the length of the `previewText` to return\n    <br>The `previewText`-attribute **MUST NOT**, but **SHOULD**,  be allowed to be configured with:\n           <br> - `trimApi` if `length` is specified, `trimApi` requests the implementing backend to read out the complete text before trimming it. This can prevent charset decoding issues, but increases load-times (defaults to `false`).\n           <br> apply options to `html`/`plain`: If the backend supports it, the client should be able to chose which content type of the message should be previewed. The option `precedence` should be submitted to tell which content type should be preferred. A lookup for the other content type is then skipped. \n           <br>(The following examples use json-decoded data for demonstration purposes.)\n    \n    **Example:** _Preview Text is returned with a max. of 200 characters._\n    ```\n    ?options={previewText: {length:200}} \n    ```\n    **Example:** _Preview Text is returned with a max. of 200 characters, trimming should be done by the backend._\n    ```\n    ?options={previewText: {length:200, trimApi: true}} \n    ```\n    **Example:** _Preview Text configured to first look up content type `plain`, then content type `html` to generate the previewText:_\n    ```\n    ?options={previewText: {plain: {length: 200, trimApi: true, precedence: true}}, {html: {length: 200, trimApi: true}} \n    ``` \n    \n    If `plain` and `html` are omitted, the options configured for `previewText` should be internally get applied to both content types.\n    **Default**: The `previewText`s default setting should be, if nothing else specified:\n    ```json\n      previewText: {\n        plain: {\n            precedence: true,\n            length: 200,\n            trimApi: true\n        },\n        html: {\n            length: 200,\n            trimApi: true\n        }\n    }\n    ```\n    \n##### Ignored Options\nif an attribute is excluded, any value found in `options` referring to it will be ignored.",
                 "operationId": "getMessageItems",
                 "parameters": [
                     {
@@ -157,14 +157,6 @@
                     },
                     {
                         "schema": {
-                            "type": "string"
-                        },
-                        "in": "query",
-                        "name": "ids",
-                        "description": "A comma-separated list of unique ids of the ListMessageItems that should be returned "
-                    },
-                    {
-                        "schema": {
                             "type": "string",
                             "example": "'{\"previewText\":{\"plain\":{\"precedence\":true,length\":200,\"trimApi\":true},html\":{\"length\":200,\"trimApi\":true}}}'",
                             "default": "'{\"previewText\":{\"plain\":{\"precedence\":true,length\":200,\"trimApi\":true},html\":{\"length\":200,\"trimApi\":true}}}'"
@@ -172,6 +164,15 @@
                         "in": "query",
                         "name": "options",
                         "description": "A json-encoded object containing additional options for the resource lookup."
+                    },
+                    {
+                        "schema": {
+                            "type": "string",
+                            "example": "'[{\"property\": \"recent\", \"value\": true}]'"
+                        },
+                        "in": "query",
+                        "name": "filter",
+                        "description": "A json encoded array of filter objects to send to the server. "
                     }
                 ],
                 "responses": {
@@ -200,6 +201,10 @@
                                                 },
                                                 "mailAccountId": {
                                                     "type": "string"
+                                                },
+                                                "uidNext": {
+                                                    "type": "string",
+                                                    "description": "Optional. The UID to be assigned to the next message in the currently selected folder, if supported by the server."
                                                 }
                                             }
                                         },
@@ -608,6 +613,10 @@
                         "items": {
                             "$ref": "#/components/schemas/MailFolder"
                         }
+                    },
+                    "uidNext": {
+                        "type": "string",
+                        "description": "Optional. The UID to be assigned to the next message in the currently selected folder, if supported by the server."
                     }
                 }
             },
