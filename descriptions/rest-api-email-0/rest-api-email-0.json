@@ -748,6 +748,12 @@
                             },
                             "messageId": {
                                 "type": "string"
+                            },
+                            "size": {
+                                "type": "integer"
+                            },
+                            "hasAttachments": {
+                                "type": "boolean"
                             }
                         },
                         "required": [
