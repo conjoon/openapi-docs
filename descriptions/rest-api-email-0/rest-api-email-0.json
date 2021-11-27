@@ -864,6 +864,15 @@
             },
             "MessageKey": {
                 "type": "object",
+                "description": "A composite key that consists of the attributes `mailAccountId`, `mailFolderId` and `id`. Uniquely identifies a message-entity occurrence. ",
+                "title": "MessageKey",
+                "x-examples": {
+                    "MessageKey example": {
+                        "id": "123",
+                        "mailAccountId": "conjoon",
+                        "mailFolderId": "INBOX"
+                    }
+                },
                 "properties": {
                     "id": {
                         "type": "string"
@@ -873,15 +882,6 @@
                     },
                     "mailFolderId": {
                         "type": "string"
-                    }
-                },
-                "description": "A composite key that consists of the attributes `mailAccountId`, `mailFolderId` and `id`. Uniquely identifies a message-entity occurrence. ",
-                "title": "MessageKey",
-                "x-examples": {
-                    "MessageKey example": {
-                        "id": "123",
-                        "mailAccountId": "conjoon",
-                        "mailFolderId": "INBOX"
                     }
                 }
             },
@@ -903,6 +903,55 @@
                         "name": "conjoon maintainer"
                     }
                 }
+            },
+            "Attachment": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/AttachmentKey"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "downloadUrl": {
+                                "type": "string",
+                                "description": "The download uri for the attachment the client understands, e.g. a data uri."
+                            },
+                            "previewImgSrc": {
+                                "type": "string",
+                                "description": "A computed src for a preview of the attachment the client understands, e.g. a data uri."
+                            },
+                            "size": {
+                                "type": "string",
+                                "description": "The size of the attachment in bytes."
+                            },
+                            "text": {
+                                "type": "string",
+                                "description": "The name of the attachment, e.g. the file name."
+                            },
+                            "type": {
+                                "type": "string",
+                                "description": "The mime type of the attachment."
+                            }
+                        }
+                    }
+                ],
+                "description": "Attachment data to be returned by the API to the requesting client."
+            },
+            "AttachmentKey": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/MessageKey"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "parentMessageItemId": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                ],
+                "description": "A composite key that consists of the attributes `mailAccountId`, `mailFolderId`, `id` and `parentMessageItemId`. Uniquely identifies an attachment belonging to a MessageItem. "
             }
         },
         "securitySchemes": {
