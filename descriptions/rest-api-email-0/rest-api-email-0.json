@@ -333,6 +333,195 @@
                 }
             }
         },
+        "/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId}/MessageItems/{messageItemId}/Attachments": {
+            "get": {
+                "tags": [
+                    "MessageItems"
+                ],
+                "summary": "Get a list of Attachments",
+                "description": "Returns a list of all `ListMessageItem`s for the MailAccount with the specified `mailAccountId` and `mailFolderId`. This response returns a list of `ListMessageItem` in the boundaries of `start` and `start + limit`; meta-information in the response need to contain the current number of unread messages in the queried mailbox along with the mailbox's identifier (`mailFolderId`) and the associated account (`mailAccountId`) itself. \n<br>\n**The fields `mailFolderId`, `mailAccountId` and `id` must always be available with the response, for each returned entity.**\n",
+                "operationId": "getMessageItems",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/mailAccountId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/mailFolderId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A list of ListMessageItems. ",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Attachment"
+                                            }
+                                        }
+                                    }
+                                },
+                                "examples": {
+                                    "Attachment response example": {
+                                        "value": {
+                                            "success": true,
+                                            "data": [
+                                                {
+                                                    "id": "1",
+                                                    "mailAccountId": "siteartwork",
+                                                    "mailFolderId": "INBOX",
+                                                    "parentMessageItemId": "181317",
+                                                    "type": "image/png",
+                                                    "text": "newmail.png",
+                                                    "size": 21884,
+                                                    "downloadUrl": "data:image/png;base64,longstring",
+                                                    "previewImgSrc": "data:image/png;base64,longstring"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "MessageDraft"
+                ],
+                "summary": "Creates new Attachments",
+                "description": "Creates new Attachments for the specified MessageItem.",
+                "operationId": "postAttachment",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/mailAccountId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/mailFolderId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The created MessageBodyDraft",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/MessageBodyDraft"
+                                        }
+                                    }
+                                }
+                            },
+                            "application/x-www-form-urlencoded": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {}
+                                }
+                            },
+                            "application/xml": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {}
+                                }
+                            }
+                        }
+                    }
+                },
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "files": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "text": {
+                                                    "type": "string"
+                                                },
+                                                "type": {
+                                                    "type": "string"
+                                                },
+                                                "localId": {
+                                                    "type": "string"
+                                                },
+                                                "mailAccountId": {
+                                                    "type": "string"
+                                                },
+                                                "mailFolderId": {
+                                                    "type": "string"
+                                                },
+                                                "parentMessageItemId": {
+                                                    "type": "string"
+                                                },
+                                                "blob": {
+                                                    "type": "object"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "examples": {
+                                "Payload example": {
+                                    "value": {
+                                        "data[0][text]": "streamdeck_key (16).png",
+                                        "data[0][type]": "image/png",
+                                        "file[0][0]": "(binary)",
+                                        "data[0][localId]": "DraftAttachment-1",
+                                        "data[0][mailAccountId]": "siteartwork",
+                                        "data[0][mailFolderId]": "INBOX.Drafts",
+                                        "data[0][parentMessageItemId]": "561"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "description": "The form data for an attachment file."
+                }
+            },
+            "parameters": [
+                {
+                    "schema": {
+                        "type": "string"
+                    },
+                    "name": "mailAccountId",
+                    "in": "path",
+                    "required": true
+                },
+                {
+                    "schema": {
+                        "type": "string"
+                    },
+                    "name": "mailFolderId",
+                    "in": "path",
+                    "required": true
+                },
+                {
+                    "schema": {
+                        "type": "string"
+                    },
+                    "name": "messageItemId",
+                    "in": "path",
+                    "required": true
+                }
+            ]
+        },
         "/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId}/MessageItems/{messageItemId}&target=MessageBody": {
             "get": {
                 "tags": [
