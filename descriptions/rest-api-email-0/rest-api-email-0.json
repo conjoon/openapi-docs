@@ -446,7 +446,7 @@
                             "schema": {
                                 "type": "object",
                                 "properties": {
-                                    "data": {
+                                    "files": {
                                         "type": "array",
                                         "items": {
                                             "type": "object",
@@ -468,16 +468,11 @@
                                                 },
                                                 "parentMessageItemId": {
                                                     "type": "string"
+                                                },
+                                                "blob": {
+                                                    "type": "object"
                                                 }
                                             }
-                                        }
-                                    },
-                                    "file": {
-                                        "type": "array",
-                                        "items": {
-                                            "type": "array",
-                                            "description": "Array with binary data, mapped to the indizes from the data array",
-                                            "items": {}
                                         }
                                     }
                                 }
