@@ -333,13 +333,13 @@
                 }
             }
         },
-        "/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId}/MessageItems/{messageItemId}/Attachments": {
+        "/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId}/MessageItems/{parentMessageItemId}/Attachments": {
             "get": {
                 "tags": [
                     "MessageItems"
                 ],
                 "summary": "Get a list of Attachments",
-                "description": "Returns a list of all `ListMessageItem`s for the MailAccount with the specified `mailAccountId` and `mailFolderId`. This response returns a list of `ListMessageItem` in the boundaries of `start` and `start + limit`; meta-information in the response need to contain the current number of unread messages in the queried mailbox along with the mailbox's identifier (`mailFolderId`) and the associated account (`mailAccountId`) itself. \n<br>\n**The fields `mailFolderId`, `mailAccountId` and `id` must always be available with the response, for each returned entity.**\n",
+                "description": "Returns a list of all `FileAttachmentItem`s for the MailAccount with the specified `mailAccountId` and `mailFolderId`. \n<br>\n**The fields `mailFolderId`, `mailAccountId`, `parentMessageitemId` and `id` must always be available with the response, for each returned entity.**\n",
                 "operationId": "getMessageItems",
                 "parameters": [
                     {
@@ -351,7 +351,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "A list of ListMessageItems. ",
+                        "description": "A list of FileAttachmentItems. ",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -363,7 +363,7 @@
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/components/schemas/Attachment"
+                                                "$ref": "#/components/schemas/FileAttachmentItem"
                                             }
                                         }
                                     }
@@ -410,7 +410,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "The created MessageBodyDraft",
+                        "description": "The created attachments as a list of FileAttachmentItems",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -420,7 +420,7 @@
                                             "type": "boolean"
                                         },
                                         "data": {
-                                            "$ref": "#/components/schemas/MessageBodyDraft"
+                                            "$ref": "#/components/schemas/FileAttachmentItem"
                                         }
                                     }
                                 }
@@ -516,11 +516,76 @@
                     "schema": {
                         "type": "string"
                     },
-                    "name": "messageItemId",
+                    "name": "parentMessageItemId",
                     "in": "path",
+                    "description": "the id of the owning message",
                     "required": true
                 }
             ]
+        },
+        "/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId}/MessageItems/{parentMessageItemId}/Attachments/{id}": {
+            "parameters": [
+                {
+                    "schema": {
+                        "type": "string"
+                    },
+                    "name": "mailAccountId",
+                    "in": "path",
+                    "required": true
+                },
+                {
+                    "schema": {
+                        "type": "string"
+                    },
+                    "name": "mailFolderId",
+                    "in": "path",
+                    "required": true
+                },
+                {
+                    "schema": {
+                        "type": "string"
+                    },
+                    "name": "parentMessageItemId",
+                    "in": "path",
+                    "description": "the id of the owning message",
+                    "required": true
+                },
+                {
+                    "schema": {
+                        "type": "string"
+                    },
+                    "name": "id",
+                    "in": "path",
+                    "required": true,
+                    "description": "the id of the referenced attachment"
+                }
+            ],
+            "delete": {
+                "summary": "Delete an Attachment",
+                "operationId": "deleteAttachment",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "boolean"
+                                        },
+                                        "": {
+                                            "$ref": "#/components/schemas/AttachmentKey"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [],
+                "description": "Deletes the attachment with the given id. The data returned is the attachment key of the deleted item, containing the **updated key information of the owning message**. If deleting the attachment triggered the resource to change its key information, the updated key will be returned.   "
+            }
         },
         "/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId}/MessageItems/{messageItemId}&target=MessageBody": {
             "get": {
@@ -1093,7 +1158,7 @@
                     }
                 }
             },
-            "Attachment": {
+            "FileAttachmentItem": {
                 "allOf": [
                     {
                         "$ref": "#/components/schemas/AttachmentKey"
@@ -1124,7 +1189,8 @@
                         }
                     }
                 ],
-                "description": "Attachment data to be returned by the API to the requesting client."
+                "description": "Attachment data to be returned by the API to the requesting client.",
+                "title": "FileAttachmentItem"
             },
             "AttachmentKey": {
                 "allOf": [
