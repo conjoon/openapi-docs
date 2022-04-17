@@ -571,20 +571,49 @@
                                 "schema": {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
-                                            "type": "boolean"
+                                        "success": {
+                                            "type": "boolean",
+                                            "description": "Indicates the successful deletion of an attachment.",
+                                            "default": true,
+                                            "readOnly": true
                                         },
-                                        "": {
-                                            "$ref": "#/components/schemas/AttachmentKey"
+                                        "data": {
+                                            "$ref": "#/components/schemas/MessageKey"
                                         }
                                     }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "default": false,
+                                            "readOnly": true
+                                        },
+                                        "data": {
+                                            "nullable": true
+                                        }
+                                    }
+                                }
+                            },
+                            "application/xml": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {}
                                 }
                             }
                         }
                     }
                 },
                 "parameters": [],
-                "description": "Deletes the attachment with the given id. The data returned is the attachment key of the deleted item, containing the **updated key information of the owning message**. If deleting the attachment triggered the resource to change its key information, the updated key will be returned.   "
+                "description": "Deletes the attachment with the given id. The data returned is the key of the owning message, containing the **updated key information**: If deleting the attachment triggered the owning resource to change its location, the updated key must reflect this.   "
             }
         },
         "/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId}/MessageItems/{messageItemId}&target=MessageBody": {
