@@ -333,6 +333,289 @@
                 }
             }
         },
+        "/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId}/MessageItems/{parentMessageItemId}/Attachments": {
+            "get": {
+                "tags": [
+                    "MessageItems"
+                ],
+                "summary": "Get a list of Attachments",
+                "description": "Returns a list of all `FileAttachmentItem`s for the MailAccount with the specified `mailAccountId` and `mailFolderId`. \n<br>\n**The fields `mailFolderId`, `mailAccountId`, `parentMessageitemId` and `id` must always be available with the response, for each returned entity.**\n",
+                "operationId": "getMessageItems",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/mailAccountId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/mailFolderId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A list of FileAttachmentItems. ",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/FileAttachmentItem"
+                                            }
+                                        }
+                                    }
+                                },
+                                "examples": {
+                                    "Attachment response example": {
+                                        "value": {
+                                            "success": true,
+                                            "data": [
+                                                {
+                                                    "id": "1",
+                                                    "mailAccountId": "siteartwork",
+                                                    "mailFolderId": "INBOX",
+                                                    "parentMessageItemId": "181317",
+                                                    "type": "image/png",
+                                                    "text": "newmail.png",
+                                                    "size": 21884,
+                                                    "downloadUrl": "data:image/png;base64,longstring",
+                                                    "previewImgSrc": "data:image/png;base64,longstring"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "MessageDraft"
+                ],
+                "summary": "Creates new Attachments",
+                "description": "Creates new Attachments for the specified MessageItem.",
+                "operationId": "postAttachment",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/mailAccountId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/mailFolderId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The created attachments as a list of FileAttachmentItems",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/FileAttachmentItem"
+                                        }
+                                    }
+                                }
+                            },
+                            "application/x-www-form-urlencoded": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {}
+                                }
+                            },
+                            "application/xml": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {}
+                                }
+                            }
+                        }
+                    }
+                },
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "files": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "text": {
+                                                    "type": "string"
+                                                },
+                                                "type": {
+                                                    "type": "string"
+                                                },
+                                                "localId": {
+                                                    "type": "string"
+                                                },
+                                                "mailAccountId": {
+                                                    "type": "string"
+                                                },
+                                                "mailFolderId": {
+                                                    "type": "string"
+                                                },
+                                                "parentMessageItemId": {
+                                                    "type": "string"
+                                                },
+                                                "blob": {
+                                                    "type": "object"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "examples": {
+                                "Payload example": {
+                                    "value": {
+                                        "data[0][text]": "streamdeck_key (16).png",
+                                        "data[0][type]": "image/png",
+                                        "file[0][0]": "(binary)",
+                                        "data[0][localId]": "DraftAttachment-1",
+                                        "data[0][mailAccountId]": "siteartwork",
+                                        "data[0][mailFolderId]": "INBOX.Drafts",
+                                        "data[0][parentMessageItemId]": "561"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "description": "The form data for an attachment file."
+                }
+            },
+            "parameters": [
+                {
+                    "schema": {
+                        "type": "string"
+                    },
+                    "name": "mailAccountId",
+                    "in": "path",
+                    "required": true
+                },
+                {
+                    "schema": {
+                        "type": "string"
+                    },
+                    "name": "mailFolderId",
+                    "in": "path",
+                    "required": true
+                },
+                {
+                    "schema": {
+                        "type": "string"
+                    },
+                    "name": "parentMessageItemId",
+                    "in": "path",
+                    "description": "the id of the owning message",
+                    "required": true
+                }
+            ]
+        },
+        "/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId}/MessageItems/{parentMessageItemId}/Attachments/{id}": {
+            "parameters": [
+                {
+                    "schema": {
+                        "type": "string"
+                    },
+                    "name": "mailAccountId",
+                    "in": "path",
+                    "required": true
+                },
+                {
+                    "schema": {
+                        "type": "string"
+                    },
+                    "name": "mailFolderId",
+                    "in": "path",
+                    "required": true
+                },
+                {
+                    "schema": {
+                        "type": "string"
+                    },
+                    "name": "parentMessageItemId",
+                    "in": "path",
+                    "description": "the id of the owning message",
+                    "required": true
+                },
+                {
+                    "schema": {
+                        "type": "string"
+                    },
+                    "name": "id",
+                    "in": "path",
+                    "required": true,
+                    "description": "the id of the referenced attachment"
+                }
+            ],
+            "delete": {
+                "summary": "Delete an Attachment",
+                "operationId": "deleteAttachment",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "description": "Indicates the successful deletion of an attachment.",
+                                            "default": true,
+                                            "readOnly": true
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/MessageKey"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "default": false,
+                                            "readOnly": true
+                                        },
+                                        "data": {
+                                            "nullable": true
+                                        }
+                                    }
+                                }
+                            },
+                            "application/xml": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {}
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [],
+                "description": "Deletes the attachment with the given id. The data returned is the key of the owning message, containing the **updated key information**: If deleting the attachment triggered the owning resource to change its location, the updated key must reflect this.   "
+            }
+        },
         "/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId}/MessageItems/{messageItemId}&target=MessageBody": {
             "get": {
                 "tags": [
@@ -864,6 +1147,15 @@
             },
             "MessageKey": {
                 "type": "object",
+                "description": "A composite key that consists of the attributes `mailAccountId`, `mailFolderId` and `id`. Uniquely identifies a message-entity occurrence. ",
+                "title": "MessageKey",
+                "x-examples": {
+                    "MessageKey example": {
+                        "id": "123",
+                        "mailAccountId": "conjoon",
+                        "mailFolderId": "INBOX"
+                    }
+                },
                 "properties": {
                     "id": {
                         "type": "string"
@@ -873,15 +1165,6 @@
                     },
                     "mailFolderId": {
                         "type": "string"
-                    }
-                },
-                "description": "A composite key that consists of the attributes `mailAccountId`, `mailFolderId` and `id`. Uniquely identifies a message-entity occurrence. ",
-                "title": "MessageKey",
-                "x-examples": {
-                    "MessageKey example": {
-                        "id": "123",
-                        "mailAccountId": "conjoon",
-                        "mailFolderId": "INBOX"
                     }
                 }
             },
@@ -903,6 +1186,56 @@
                         "name": "conjoon maintainer"
                     }
                 }
+            },
+            "FileAttachmentItem": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/AttachmentKey"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "downloadUrl": {
+                                "type": "string",
+                                "description": "The download uri for the attachment the client understands, e.g. a data uri."
+                            },
+                            "previewImgSrc": {
+                                "type": "string",
+                                "description": "A computed src for a preview of the attachment the client understands, e.g. a data uri."
+                            },
+                            "size": {
+                                "type": "string",
+                                "description": "The size of the attachment in bytes."
+                            },
+                            "text": {
+                                "type": "string",
+                                "description": "The name of the attachment, e.g. the file name."
+                            },
+                            "type": {
+                                "type": "string",
+                                "description": "The mime type of the attachment."
+                            }
+                        }
+                    }
+                ],
+                "description": "Attachment data to be returned by the API to the requesting client.",
+                "title": "FileAttachmentItem"
+            },
+            "AttachmentKey": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/MessageKey"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "parentMessageItemId": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                ],
+                "description": "A composite key that consists of the attributes `mailAccountId`, `mailFolderId`, `id` and `parentMessageItemId`. Uniquely identifies an attachment belonging to a MessageItem. "
             }
         },
         "securitySchemes": {
