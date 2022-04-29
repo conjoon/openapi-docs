@@ -683,7 +683,77 @@
                     "in": "path",
                     "required": true
                 }
-            ]
+            ],
+            "put": {
+                "summary": "Updates a MessageBody",
+                "operationId": "updateMessageBody",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Bad Request - the client sent a request the API could not understand"
+                    },
+                    "401": {
+                        "description": "Unauthorized - the client is not authenticated."
+                    },
+                    "403": {
+                        "description": "Forbidden - the resource may not be accessed by the client."
+                    },
+                    "404": {
+                        "description": "Not Found - if the MessageBody does not exist."
+                    },
+                    "500": {
+                        "description": "Internal Server Error - if the implementing API encountered an internal error.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {
+                                            "type": "number"
+                                        },
+                                        "detail": {
+                                            "type": "string"
+                                        },
+                                        "title": {
+                                            "type": "string"
+                                        },
+                                        "instance": {
+                                            "type": "string"
+                                        },
+                                        "type": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "MessageBody"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "textHtml": {
+                                        "type": "string"
+                                    },
+                                    "textPlain": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "description": ""
+                },
+                "description": "Updates the `MessageBody` of the message represented by the key fragments."
+            }
         },
         "/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId}/MessageItems/{messageItemId}": {
             "get": {
