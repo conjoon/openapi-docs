@@ -749,7 +749,7 @@
                 "tags": [
                     "MessageItem"
                 ],
-                "summary": "Updates MessageItem",
+                "summary": "Updates a MessageItem",
                 "description": "Updates the specific MessageItem with the submitted information.",
                 "operationId": "putMessageItem",
                 "parameters": [
@@ -843,6 +843,18 @@
                                 }
                             }
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized - the client is not authenticated."
+                    },
+                    "403": {
+                        "description": "Forbidden - the resource may not be accessed by the client."
+                    },
+                    "404": {
+                        "description": "Not Found - if the MessageItem does not exist."
+                    },
+                    "500": {
+                        "description": "Internal Server Error - if the implementing API encountered an internal error."
                     }
                 }
             },
@@ -871,7 +883,32 @@
                     "in": "path",
                     "required": true
                 }
-            ]
+            ],
+            "delete": {
+                "summary": "",
+                "operationId": "deleteMessage",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "401": {
+                        "description": "Unauthorized - the client is not authenticated."
+                    },
+                    "403": {
+                        "description": "Forbidden - the resource may not be accessed by the client."
+                    },
+                    "404": {
+                        "description": "Not Found - if the MessageItem does not exist."
+                    },
+                    "500": {
+                        "description": "Internal Server Error - if the implementing API encountered an internal error."
+                    }
+                },
+                "description": "Entirely deletes a Message, including all associated `Attachments` and the `MessageBody`.",
+                "tags": [
+                    "MessageItem"
+                ]
+            }
         }
     },
     "tags": [
