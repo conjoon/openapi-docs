@@ -684,7 +684,7 @@
                     "required": true
                 }
             ],
-            "put": {
+            "patch": {
                 "summary": "Updates a MessageBody",
                 "operationId": "updateMessageBody",
                 "responses": {
@@ -740,11 +740,58 @@
                             "schema": {
                                 "type": "object",
                                 "properties": {
-                                    "textHtml": {
-                                        "type": "string"
-                                    },
-                                    "textPlain": {
-                                        "type": "string"
+                                    "data": {
+                                        "type": "object",
+                                        "required": [
+                                            "mailAccountId",
+                                            "mailFolderId",
+                                            "id",
+                                            "attributes"
+                                        ],
+                                        "properties": {
+                                            "mailAccountId": {
+                                                "type": "string"
+                                            },
+                                            "mailFolderId": {
+                                                "type": "string"
+                                            },
+                                            "id": {
+                                                "type": "string"
+                                            },
+                                            "localId": {
+                                                "type": "string"
+                                            },
+                                            "attributes": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "textPlain": {
+                                                        "type": "string"
+                                                    },
+                                                    "textHtml": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "required": [
+                                    "data"
+                                ]
+                            },
+                            "examples": {
+                                "Payload Example": {
+                                    "value": {
+                                        "data": {
+                                            "attributes": {
+                                                "textPlain": "string",
+                                                "textHtml": "string"
+                                            },
+                                            "mailFolderId": "string",
+                                            "mailAccountId": "string",
+                                            "id": "string",
+                                            "localId": "string"
+                                        }
                                     }
                                 }
                             }
@@ -815,12 +862,12 @@
                     }
                 }
             },
-            "put": {
+            "patch": {
                 "tags": [
                     "MessageItem"
                 ],
                 "summary": "Updates a MessageItem",
-                "description": "Updates the specific MessageItem with the submitted information.",
+                "description": "Updates the specific `MessageItem` with the submitted information.\nIt is possible that the server decides to store the message under a new id. The returned keys must reflect the changes, and the client must inspect the keys to make sure data is properly updated.\nThe client can move a message to a different MailFolder by expolicitely setting the `mailFolder`-value in the attribute bag.",
                 "operationId": "putMessageItem",
                 "parameters": [
                     {
@@ -831,66 +878,6 @@
                     },
                     {
                         "$ref": "#/components/parameters/messageItemId"
-                    },
-                    {
-                        "name": "origin",
-                        "required": false,
-                        "description": "Required to let the server know that the operation on the MessageItem is related to a recently created message, i.e. if the request is chained by creating a MessageDraft, for which now the envelope information should be updated.",
-                        "in": "query",
-                        "schema": {
-                            "type": "string",
-                            "enum": [
-                                "create"
-                            ]
-                        }
-                    },
-                    {
-                        "name": "action",
-                        "required": false,
-                        "description": "Requests a move operation for the specified MessageItem. Requires additional query-parameter `mailFolderId`",
-                        "in": "query",
-                        "schema": {
-                            "type": "string",
-                            "enum": [
-                                "move"
-                            ]
-                        }
-                    },
-                    {
-                        "name": "mailFolderId",
-                        "required": false,
-                        "description": "A new location for the MessageItem, if `action` represents a `move`-operation. Not to be confused with the path-parameter `{mailFolderId}`, which is required to identify the resource. The response must contain the MessageItem for this type of request.",
-                        "in": "query",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "seen",
-                        "required": false,
-                        "description": "Marks the MessageItem as seen/unseen",
-                        "in": "query",
-                        "schema": {
-                            "type": "boolean"
-                        }
-                    },
-                    {
-                        "name": "flagged",
-                        "required": false,
-                        "description": "Marks the MessageItem as flagged/un-flagged",
-                        "in": "query",
-                        "schema": {
-                            "type": "boolean"
-                        }
-                    },
-                    {
-                        "name": "draft",
-                        "required": false,
-                        "description": "Marks the MessageItem as a draft",
-                        "in": "query",
-                        "schema": {
-                            "type": "boolean"
-                        }
                     }
                 ],
                 "responses": {
@@ -926,6 +913,124 @@
                     "500": {
                         "description": "Internal Server Error - if the implementing API encountered an internal error."
                     }
+                },
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "data": {
+                                        "type": "object",
+                                        "required": [
+                                            "mailAccountId",
+                                            "mailFolderId",
+                                            "id",
+                                            "attributes"
+                                        ],
+                                        "properties": {
+                                            "mailAccountId": {
+                                                "type": "string"
+                                            },
+                                            "mailFolderId": {
+                                                "type": "string"
+                                            },
+                                            "id": {
+                                                "type": "string"
+                                            },
+                                            "localId": {
+                                                "type": "string"
+                                            },
+                                            "attributes": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "to": {
+                                                        "type": "string",
+                                                        "description": "JSON-encoded representation of an EmailAddress"
+                                                    },
+                                                    "cc": {
+                                                        "type": "string",
+                                                        "description": "JSON-encoded representation of a list of EmailAddresses"
+                                                    },
+                                                    "bcc": {
+                                                        "type": "string",
+                                                        "description": "JSON-encoded representation of a list of EmailAddresses"
+                                                    },
+                                                    "date": {
+                                                        "type": "string",
+                                                        "description": "client's UNIX Timestamp representing date of creation "
+                                                    },
+                                                    "draft": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "flagged": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "from": {
+                                                        "type": "string",
+                                                        "description": "JSON-encoded representation of an EmailAddress"
+                                                    },
+                                                    "inReplyTo": {
+                                                        "type": "string"
+                                                    },
+                                                    "references": {
+                                                        "type": "string"
+                                                    },
+                                                    "replyTo": {
+                                                        "type": "string",
+                                                        "description": "JSON-encoded representation of an EmailAddress"
+                                                    },
+                                                    "seen": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "subject": {
+                                                        "type": "string"
+                                                    },
+                                                    "xCnDraftInfo": {
+                                                        "type": "string"
+                                                    },
+                                                    "mailFolderId": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "required": [
+                                    "data"
+                                ]
+                            },
+                            "examples": {
+                                "Payload Example": {
+                                    "value": {
+                                        "data": {
+                                            "mailAccountId": "string",
+                                            "mailFolderId": "string",
+                                            "id": "string",
+                                            "localId": "string",
+                                            "attributes": {
+                                                "to": "string",
+                                                "cc": "string",
+                                                "bcc": "string",
+                                                "date": "string",
+                                                "draft": true,
+                                                "flagged": true,
+                                                "from": "string",
+                                                "inReplyTo": "string",
+                                                "references": "string",
+                                                "replyTo": "string",
+                                                "seen": true,
+                                                "subject": "string",
+                                                "xCnDraftInfo": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "description": ""
                 }
             },
             "parameters": [
@@ -1277,34 +1382,6 @@
                         "hasAttachments": true
                     }
                 }
-            },
-            "putMessageItemResponse": {
-                "allOf": [
-                    {
-                        "$ref": "#/components/schemas/MessageKey"
-                    }
-                ],
-                "type": "object",
-                "properties": {
-                    "seen": {
-                        "type": "boolean"
-                    },
-                    "flagged": {
-                        "type": "boolean"
-                    }
-                }
-            },
-            "moveMessageItemResponse": {
-                "type": "object",
-                "properties": {
-                    "success": {
-                        "type": "boolean"
-                    },
-                    "data": {
-                        "$ref": "#/components/schemas/MessageItem"
-                    }
-                },
-                "x-examples": {}
             },
             "MessageKey": {
                 "type": "object",
