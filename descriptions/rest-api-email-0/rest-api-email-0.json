@@ -105,9 +105,9 @@
         "/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId}/MessageItems": {
             "get": {
                 "tags": [
-                    "MessageItems"
+                    "MessageItem"
                 ],
-                "summary": "Get a collection of MessageItems",
+                "summary": "Get a collection of envelope information of messages",
                 "description": "Returns a list of all `MessageItem`s for the MailAccount with the specified `mailAccountId` and `mailFolderId`. This response returns a list of `MessageItem`s in the boundaries of `start` and `start + limit`; meta-information in the response need to contain the current number of unread messages in the queried mailbox along with the mailbox's identifier (`mailFolderId`) and the associated account (`mailAccountId`) itself. \n<br>\n**The fields `mailFolderId`, `mailAccountId` and `id` must always be available with the response, for each returned entity.**\n\n### Query Parameters\n\n### `limit`\nA client must explicitly set `limit` to -1 if **ALL** items should be returned. `limit` is only considered if no filter with the property `id` is found.\n\n### `attributes`\n\nAllows to define the attributes to return with a MessageItem. Defaults to `*` which means all attributes of a `ListMessageItem` are included.\nTo exclude attributes, append a comma-separated list with the names of attributes to exclude:\n\n**Example:** _All attributes are included (default)_\n```\n?attributes=* \n```\n\n**Example:** _Only `previewText` will be included in the set of attributes_\n```\n?attributes=previewText \n```\n\n**Example:** _`subject` and `previewText` will not be included in the set of attributes_\n```\n?attributes=*,previewText,subject \n```\n\n### `filter`\n\nA **json-encoded** string providing additional filter to consider. Must be an array of filter-objects. Multiple filter objects are considered as logical `OR` conditionals.\nIf the server does not understand the filter, a 400-response **MUST** be returned.\nTo group `filter` as logical `AND`, use Arrays of Arrays.\n\n\n#### Filter configuration\n- `property`\n    <br>The `property`-key **SHOULD** be an attribute the server understands.\n- `value`\n    <br>The `value`-key **SHOULD** be a a value for the `property`. The format is arbitrary.\n- `operator`\n    <br>The `operator`-key **SHOULD** be the operator that is used for comparing a list of data with the `property`s `value`. The default operator used is `=`\n         <br>(The following examples use json-decoded data for demonstration purposes.)\n         <br>\n    **Example:** _Getting messages flagged as `recent`._\n    ```\n    ?filter=[{\"property\": \"recent\", \"value\": true}]\n    ```\n    **Example:** _Getting messages flagged as `recent`, **OR** messages flagged as `unseen` with an `id` greater than 1657._\n    ```\n    ?filter=[{\"property\": \"recent\", \"value\": true}, [{\"property\": \"unseen\", \"value\": true}, {\"property\": \"id\", \"value\": 1657, \"operator\": \">\"}]]\n    ```\n    **Example:** _Getting only a specific set of messages based on their `id`s:\n    ```\n    ?filter=[{\"property\": \"id\", \"value\": [\"89678\", \"45\", \"98798\"], \"operator\": \"in\"}]\n    ```\n\n\n\n### `options`\n\nA **json-encoded** string providing additional options for the attributes.\n\n- `previewText`\n    <br>The `previewText`-attribute **MUST** be allowed to be configured with:\n           <br> - `length` this allows to specify the length of the `previewText` to return\n    <br>The `previewText`-attribute **MUST NOT**, but **SHOULD**,  be allowed to be configured with:\n           <br> - `trimApi` if `length` is specified, `trimApi` requests the implementing backend to read out the complete text before trimming it. This can prevent charset decoding issues, but increases load-times (defaults to `false`).\n           <br> apply options to `html`/`plain`: If the backend supports it, the client should be able to chose which content type of the message should be previewed. The option `precedence` should be submitted to tell which content type should be preferred. A lookup for the other content type is then skipped. \n           <br>(The following examples use json-decoded data for demonstration purposes.)\n    \n    **Example:** _Preview Text is returned with a max. of 200 characters._\n    ```\n    ?options={previewText: {length:200}} \n    ```\n    **Example:** _Preview Text is returned with a max. of 200 characters, trimming should be done by the backend._\n    ```\n    ?options={previewText: {length:200, trimApi: true}} \n    ```\n    **Example:** _Preview Text configured to first look up content type `plain`, then content type `html` to generate the previewText:_\n    ```\n    ?options={previewText: {plain: {length: 200, trimApi: true, precedence: true}}, {html: {length: 200, trimApi: true}} \n    ``` \n    \n    If `plain` and `html` are omitted, the options configured for `previewText` should be internally get applied to both content types.\n    **Default**: The `previewText`s default setting should be, if nothing else specified:\n    ```json\n      previewText: {\n        plain: {\n            precedence: true,\n            length: 200,\n            trimApi: true\n        },\n        html: {\n            length: 200,\n            trimApi: true\n        }\n    }\n    ```\n    \n##### Ignored Options\nif an attribute is excluded, any value found in `options` referring to it will be ignored.",
                 "operationId": "getMessageItems",
                 "parameters": [
@@ -275,7 +275,7 @@
                 "tags": [
                     "MessageDraft"
                 ],
-                "summary": "Creates a new draft",
+                "summary": "Create a new message as a draft",
                 "description": "Creates a new draft for the specified MailAccount and stores it in the MailBox with the specified mailFolderId",
                 "operationId": "postMessageBodyDraft",
                 "parameters": [
@@ -325,8 +325,8 @@
                 "tags": [
                     "MessageItem"
                 ],
-                "summary": "Return a single MessageItem",
-                "description": "Returns the single `MessageItem` for the specified key fragments.\n\n### Query Parameters\n\n### `attributes`\n\nAllows to define the attributes to return with a `MessageItem`. Defaults to `*` which means all attributes of a `MessageItem` are included.\nTo exclude attributes, append a comma-separated list with the names of attributes to exclude:\n\n**Example:** _All attributes are included (default)_\n```\n?attributes=* \n```\n\n**Example:** _Only `hasAttachments` will be included in the set of attributes_\n```\n?attributes=hasAttachments\n```\n\n**Example:** _`subject` and `previewText` will not be included in the set of attributes_\n```\n?attributes=*,previewText,subject \n```",
+                "summary": "Return envelope information of a single message",
+                "description": "Returns the single `MessageItem` for the specified key fragments.\nThe API does not distinguish between  requesting a `MessageDraft` or a `MessageItem`, since envelope informations are all the same. It is up to the client to render the information given the specific context (i.e. read or edit).\n\n### Query Parameters\n\n### `attributes`\n\nAllows to define the attributes to return with a `MessageItem`. Defaults to `*` which means all attributes of a `MessageItem` are included.\nTo exclude attributes, append a comma-separated list with the names of attributes to exclude:\n\n**Example:** _All attributes are included (default)_\n```\n?attributes=* \n```\n\n**Example:** _Only `hasAttachments` will be included in the set of attributes_\n```\n?attributes=hasAttachments\n```\n\n**Example:** _`subject` and `previewText` will not be included in the set of attributes_\n```\n?attributes=*,previewText,subject \n```",
                 "operationId": "getMessageItem",
                 "parameters": [
                     {
@@ -407,7 +407,7 @@
                 }
             ],
             "delete": {
-                "summary": "Delete a Message",
+                "summary": "Delete a message",
                 "operationId": "deleteMessage",
                 "responses": {
                     "200": {
@@ -437,8 +437,8 @@
                 "tags": [
                     "MessageItem"
                 ],
-                "summary": "Updates a MessageItem",
-                "description": "Updates the specific `MessageItem` with the submitted information.\nThe client can move a message to a different MailFolder by explicitely setting the `mailFolderId`-value in the `attribute` bag.\n\nIt is possible that the server decides to store the message under a new `id`. The returned keys must reflect the changes, and the client must inspect the keys to make sure data is properly updated.\n\n**Note:**\nIf fields of a message are updated and its id changes, the backend **MUST** consider the new resource location for all related entities of **THIS** message, such as its body and its attachments. The client has to take care of applying the newly created key fragments to existing entities currently used in memory, either dynamically or by triggering a complete reload of the updated message.",
+                "summary": "Move/Flag a message",
+                "description": "Updates the specific `MessageItem` with the submitted information.\nThe client can move a message to a different MailFolder by explicitely setting the `mailFolderId`-value in the `attribute` bag.\n\nIt is possible that the server decides to store the message under a new `id` if a message was moved to a new location. The returned keys must reflect the changes, and the client must inspect the keys to make sure data is properly updated.\n\n**Note:**\nIf fields of a message are updated and its id changes, the backend **MUST** consider the new resource location for all related entities of **THIS** message, such as its body and its attachments. The client has to take care of applying the newly created key fragments to existing entities currently used in memory, either dynamically or by triggering a complete reload of the updated message.",
                 "operationId": "putMessageItem",
                 "parameters": [
                     {
@@ -603,7 +603,7 @@
                 "tags": [
                     "MessageItem"
                 ],
-                "summary": "Updates a MessageDraft",
+                "summary": "Updates a message as a draft",
                 "description": "Updates the specific `MessageDraft` with the submitted information.\nIt is possible that the server decides to store the message under a new `id`. The returned keys must reflect the changes, and the client must inspect the keys to make sure data is properly updated.\n\n**Note:**\nIf fields of a message are updated and its id changes, the backend **MUST** consider the new resource location for all related entities of **THIS** message, such as its body and its attachments. The client has to take care of applying the newly created key fragments to existing entities currently used in memory, either dynamically or by triggering a complete reload of the updated message.",
                 "operationId": "putMessageItem",
                 "parameters": [
@@ -788,7 +788,7 @@
                 "tags": [
                     "MessageBody"
                 ],
-                "summary": "Returns a single MessageBody",
+                "summary": "Return the body of a message",
                 "description": "Returns the single `MessageBody` for the specified key fragments.",
                 "operationId": "getMessageBody",
                 "parameters": [
@@ -862,7 +862,7 @@
                 }
             ],
             "patch": {
-                "summary": "Updates a MessageBody",
+                "summary": "Update the body of a message",
                 "operationId": "updateMessageBody",
                 "responses": {
                     "200": {
@@ -982,7 +982,7 @@
         },
         "/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId}/MessageItems/{parentMessageItemId}/Attachments": {
             "get": {
-                "summary": "Get a list of Attachments",
+                "summary": "Get a list of attachments",
                 "description": "Returns a list of all `FileAttachmentItem`s for the MailAccount with the specified `mailAccountId` and `mailFolderId`. \n<br>\n**The fields `mailFolderId`, `mailAccountId`, `parentMessageitemId` and `id` must always be available with the response, for each returned entity.**\n",
                 "operationId": "getAttachmentList",
                 "parameters": [
@@ -1041,7 +1041,7 @@
                 ]
             },
             "post": {
-                "summary": "Creates new Attachments",
+                "summary": "Create new attachments",
                 "description": "Creates new Attachments for the specified MessageItem.",
                 "operationId": "postAttachment",
                 "parameters": [
@@ -1208,7 +1208,7 @@
                 }
             ],
             "delete": {
-                "summary": "Delete an Attachment",
+                "summary": "Delete an attachment",
                 "operationId": "deleteAttachment",
                 "responses": {
                     "200": {
