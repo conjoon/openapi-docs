@@ -12,7 +12,7 @@
             "name": "MIT",
             "url": "https://github.com/conjoon/rest-api-description"
         },
-        "description": "Lightweight REST API specification for communicating with email services, including reading, writing and sending messages. Protocol agnostic."
+        "description": "Lightweight REST API specification for communicating with email services, including reading, writing and sending messages. Protocol agnostic.\n\n## A note about Messages:\nThe **rest-api-email** considers 3 different entities which are tightly related when handling messages:\n - MessageItem/MessageDraft\n - MessageBody\n - Attachments\nEach entity can be identified a compound key that contains the following information:\n - mailAccountId\n - mailFolderId\n - id\n Additionally, Attachments have a `parentMessageItemId`-key fragment that represents the `id` of the owning message.\n While a `MessageItem`/`MessageDraft` is considered to be the \"root\"-entity of a message, implementing APIs have to take care of handling all key information and update related entities accordingly after any action requested.\n \nExample:\n<br>\nThe client requests the `subject` of a message to change. The server responds with a newly created `id` for the message (e.g. with IMAP, a message can not directly be edited under a UID that persists accross changes). The client **MUST** now consider **ALL** related entities of the message have been updated on the server, and has to apply the updated key information to all entities involved on the client itself, if applicable (e.g. an opened MessageBody in an editor).  "
     },
     "servers": [
         {
@@ -743,12 +743,16 @@
                                     "data": {
                                         "type": "object",
                                         "required": [
+                                            "type",
                                             "mailAccountId",
                                             "mailFolderId",
                                             "id",
                                             "attributes"
                                         ],
                                         "properties": {
+                                            "type": {
+                                                "type": "string"
+                                            },
                                             "mailAccountId": {
                                                 "type": "string"
                                             },
@@ -756,9 +760,6 @@
                                                 "type": "string"
                                             },
                                             "id": {
-                                                "type": "string"
-                                            },
-                                            "localId": {
                                                 "type": "string"
                                             },
                                             "attributes": {
@@ -780,17 +781,17 @@
                                 ]
                             },
                             "examples": {
-                                "Payload Example": {
+                                "Updating a MessageBody": {
                                     "value": {
                                         "data": {
+                                            "type": "MessageBody",
+                                            "mailAccountId": "dev",
+                                            "mailFolderId": "INBOX.Drafts",
+                                            "id": "324234",
                                             "attributes": {
-                                                "textPlain": "string",
-                                                "textHtml": "string"
-                                            },
-                                            "mailFolderId": "string",
-                                            "mailAccountId": "string",
-                                            "id": "string",
-                                            "localId": "string"
+                                                "textPlain": "Hello World",
+                                                "textHtml": "<b>Hello World</b>"
+                                            }
                                         }
                                     }
                                 }
@@ -867,7 +868,7 @@
                     "MessageItem"
                 ],
                 "summary": "Updates a MessageItem",
-                "description": "Updates the specific `MessageItem` with the submitted information.\nIt is possible that the server decides to store the message under a new id. The returned keys must reflect the changes, and the client must inspect the keys to make sure data is properly updated.\nThe client can move a message to a different MailFolder by expolicitely setting the `mailFolder`-value in the attribute bag.",
+                "description": "Updates the specific `MessageItem` with the submitted information.\nIt is possible that the server decides to store the message under a new `id`. The returned keys must reflect the changes, and the client must inspect the keys to make sure data is properly updated.\nThe client can move a message to a different MailFolder by explicitely setting the `mailFolderId`-value in the `attribute` bag.\n\n**Note:**\nIf fields of a message are updated and its id changes, the backend **MUST** consider the new resource location for all related entities of **THIS** message, such as its body and its attachments. The client has to take care of applying the newly created key fragments to existing entities currently used in memory, either dynamically or by triggering a complete reload of the updated message.",
                 "operationId": "putMessageItem",
                 "parameters": [
                     {
@@ -923,12 +924,16 @@
                                     "data": {
                                         "type": "object",
                                         "required": [
+                                            "type",
                                             "mailAccountId",
                                             "mailFolderId",
                                             "id",
                                             "attributes"
                                         ],
                                         "properties": {
+                                            "type": {
+                                                "type": "string"
+                                            },
                                             "mailAccountId": {
                                                 "type": "string"
                                             },
@@ -936,9 +941,6 @@
                                                 "type": "string"
                                             },
                                             "id": {
-                                                "type": "string"
-                                            },
-                                            "localId": {
                                                 "type": "string"
                                             },
                                             "attributes": {
@@ -1002,27 +1004,45 @@
                                 ]
                             },
                             "examples": {
-                                "Payload Example": {
+                                "moving a MessageItem": {
                                     "value": {
                                         "data": {
-                                            "mailAccountId": "string",
-                                            "mailFolderId": "string",
-                                            "id": "string",
-                                            "localId": "string",
+                                            "type": "MessageItem",
+                                            "mailAccountId": "dev",
+                                            "mailFolderId": "INBOX.Drafts",
+                                            "id": "234424",
+                                            "localId": "2442zui244ghgkj52",
                                             "attributes": {
-                                                "to": "string",
-                                                "cc": "string",
-                                                "bcc": "string",
-                                                "date": "string",
-                                                "draft": true,
-                                                "flagged": true,
-                                                "from": "string",
-                                                "inReplyTo": "string",
-                                                "references": "string",
-                                                "replyTo": "string",
+                                                "mailFolderId": "INBOX.Trash"
+                                            }
+                                        }
+                                    }
+                                },
+                                "updating the flags of a MessageItem": {
+                                    "value": {
+                                        "data": {
+                                            "type": "MessageItem",
+                                            "mailAccountId": "dev",
+                                            "mailFolderId": "INBOX.Drafts",
+                                            "id": "234424",
+                                            "localId": "2442zui244ghgkj52",
+                                            "attributes": {
                                                 "seen": true,
-                                                "subject": "string",
-                                                "xCnDraftInfo": "string"
+                                                "flagged": true
+                                            }
+                                        }
+                                    }
+                                },
+                                "updating a Message with a new subject": {
+                                    "value": {
+                                        "data": {
+                                            "type": "MessageDraft",
+                                            "mailAccountId": "dev",
+                                            "mailFolderId": "INBOX.Drafts",
+                                            "id": "234424",
+                                            "localId": "2442zui244ghgkj52",
+                                            "attributes": {
+                                                "subject": "Hello World"
                                             }
                                         }
                                     }
@@ -1382,6 +1402,34 @@
                         "hasAttachments": true
                     }
                 }
+            },
+            "putMessageItemResponse": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/MessageKey"
+                    }
+                ],
+                "type": "object",
+                "properties": {
+                    "seen": {
+                        "type": "boolean"
+                    },
+                    "flagged": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "moveMessageItemResponse": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/MessageItem"
+                    }
+                },
+                "x-examples": {}
             },
             "MessageKey": {
                 "type": "object",
