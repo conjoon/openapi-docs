@@ -534,7 +534,10 @@
             "description": "Internal Server Error - if the implementing API encountered an internal error."
           }
         },
-        "description": "Sends the message represented by the Path Params. The message must be flagged as `DRAFT` in order for the operation to succeed.\n\nThe `POST`-operation does not require any parameters.\n\nSending a message means that a server-connection configured with the `MailAccount` was established and the data of the message was successfully assembled to meet the server's protocol-requirements for sending it. If the response represents a successful operation, implementing clients can then take care of deleting the sent message from its source folder and/or move/copy it to a new destination folder (e.g. _Sent_-folder), if applicable."
+        "description": "Sends the message represented by the Path Params. The message must be flagged as `DRAFT` in order for the operation to succeed.\n\nThe `POST`-operation does not require any parameters.\n\nSending a message means that a server-connection configured with the `MailAccount` was established and the data of the message was successfully assembled to meet the server's protocol-requirements for sending it. If the response represents a successful operation, implementing clients can then take care of deleting the sent message from its source folder and/or move/copy it to a new destination folder (e.g. _Sent_-folder), if applicable.",
+        "tags": [
+          "MessageItem"
+        ]
       }
     },
     "/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId}/MessageItems/{messageItemId}/MessageItem": {
