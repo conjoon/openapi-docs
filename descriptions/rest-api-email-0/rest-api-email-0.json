@@ -12,7 +12,7 @@
             "name": "MIT",
             "url": "https://github.com/conjoon/rest-api-description"
         },
-        "description": "Lightweight REST API specification for communicating with email services, including reading, writing and sending messages. Protocol agnostic."
+        "description": "Lightweight REST API specification for communicating with email services, including reading, writing and sending messages. Protocol agnostic.\n\n## A note about Messages:\nThe **rest-api-email** considers 3 different entities which are tightly related when handling messages:\n - MessageItem/MessageDraft\n - MessageBody\n - Attachments\nEach entity can be identified a compound key that contains the following information:\n - mailAccountId\n - mailFolderId\n - id\n Additionally, Attachments have a `parentMessageItemId`-key fragment that represents the `id` of the owning message.\n While a `MessageItem`/`MessageDraft` is considered to be the \"root\"-entity of a message, implementing APIs have to take care of handling all key information and update related entities accordingly after any action requested.\n \nExample:\n<br>\nThe client requests the `subject` of a message to change. The server responds with a newly created `id` for the message (e.g. with IMAP, a message can not directly be edited under a UID that persists accross changes). The client **MUST** now consider **ALL** related entities of the message have been updated on the server, and has to apply the updated key information to all entities involved on the client itself, if applicable (e.g. an opened MessageBody in an editor).  "
     },
     "servers": [
         {
@@ -38,7 +38,7 @@
                 ],
                 "summary": "Lists mail accounts",
                 "description": "Lists available mail accounts for the specified login",
-                "operationId": "mailAccounts",
+                "operationId": "getMailAccounts",
                 "responses": {
                     "200": {
                         "description": "Available MailAccounts",
@@ -71,7 +71,7 @@
                 ],
                 "summary": "List mail boxes",
                 "description": "Returns all available mail boxes belonging to a specific mail account",
-                "operationId": "mailFolders",
+                "operationId": "getMailFolders",
                 "parameters": [
                     {
                         "$ref": "#/components/parameters/mailAccountId"
@@ -105,10 +105,10 @@
         "/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId}/MessageItems": {
             "get": {
                 "tags": [
-                    "MessageItems"
+                    "MessageItem"
                 ],
-                "summary": "Get a list of ListMessageItems",
-                "description": "Returns a list of all `ListMessageItem`s for the MailAccount with the specified `mailAccountId` and `mailFolderId`. This response returns a list of `ListMessageItem` in the boundaries of `start` and `start + limit`; meta-information in the response need to contain the current number of unread messages in the queried mailbox along with the mailbox's identifier (`mailFolderId`) and the associated account (`mailAccountId`) itself. \n<br>\n**The fields `mailFolderId`, `mailAccountId` and `id` must always be available with the response, for each returned entity.**\n\n### Query Parameters\n\n### `limit`\nA client must explicitly set `limit` to -1 if **ALL** items should be returned. `limit` is only considered if `ids` is omitted.\n\n### `attributes`\n\nAllows to define the attributes to return with a MessageItem. Defaults to `*` which means all attributes of a `ListMessageItem` are included.\nTo exclude attributes, append a comma-separated list with the names of attributes to exclude:\n\n**Example:** _All attributes are included (default)_\n```\n?attributes=* \n```\n\n**Example:** _Only `previewText` will be included in the set of attributes_\n```\n?attributes=previewText \n```\n\n**Example:** _`subject` and `previewText` will not be included in the set of attributes_\n```\n?attributes=*,previewText,subject \n```\n\n### `filter`\n\nA **json-encoded** string providing additional filter to consider. Must be an array of filter-objects. Multiple filter objects are considered as logical `OR` conditionals.\nIf the server does not understand the filter, a 400-response **MUST** be returned.\nTo group `filter` as logical `AND`, use Arrays of Arrays.\n\n\n#### Filter configuration\n- `property`\n    <br>The `property`-key **SHOULD** be an attribute the server understands.\n- `value`\n    <br>The `value`-key **SHOULD** be a a value for the `property`. The format is arbitrary.\n- `operator`\n    <br>The `operator`-key **SHOULD** be the operator that is used for comparing a list of data with the `property`s `value`. The default operator used is `=`\n         <br>(The following examples use json-decoded data for demonstration purposes.)\n         <br>\n    **Example:** _Getting messages flagged as `recent`._\n    ```\n    ?filter=[{\"property\": \"recent\", \"value\": true}]\n    ```\n   <br>\n    **Example:** _Getting messages flagged as `recent`, **OR** messages flagged as `unseen` with an `uid` greater than 1657._\n    ```\n    ?filter=[{\"property\": \"recent\", \"value\": true}, [{\"property\": \"unseen\", \"value\": true}, {\"property\": \"uid\", \"value\": 1657, \"operator\": \">\"}]]\n    ```\n\n\n### `options`\n\nA **json-encoded** string providing additional options for the attributes.\n\n- `previewText`\n    <br>The `previewText`-attribute **MUST** be allowed to be configured with:\n           <br> - `length` this allows to specify the length of the `previewText` to return\n    <br>The `previewText`-attribute **MUST NOT**, but **SHOULD**,  be allowed to be configured with:\n           <br> - `trimApi` if `length` is specified, `trimApi` requests the implementing backend to read out the complete text before trimming it. This can prevent charset decoding issues, but increases load-times (defaults to `false`).\n           <br> apply options to `html`/`plain`: If the backend supports it, the client should be able to chose which content type of the message should be previewed. The option `precedence` should be submitted to tell which content type should be preferred. A lookup for the other content type is then skipped. \n           <br>(The following examples use json-decoded data for demonstration purposes.)\n    \n    **Example:** _Preview Text is returned with a max. of 200 characters._\n    ```\n    ?options={previewText: {length:200}} \n    ```\n    **Example:** _Preview Text is returned with a max. of 200 characters, trimming should be done by the backend._\n    ```\n    ?options={previewText: {length:200, trimApi: true}} \n    ```\n    **Example:** _Preview Text configured to first look up content type `plain`, then content type `html` to generate the previewText:_\n    ```\n    ?options={previewText: {plain: {length: 200, trimApi: true, precedence: true}}, {html: {length: 200, trimApi: true}} \n    ``` \n    \n    If `plain` and `html` are omitted, the options configured for `previewText` should be internally get applied to both content types.\n    **Default**: The `previewText`s default setting should be, if nothing else specified:\n    ```json\n      previewText: {\n        plain: {\n            precedence: true,\n            length: 200,\n            trimApi: true\n        },\n        html: {\n            length: 200,\n            trimApi: true\n        }\n    }\n    ```\n    \n##### Ignored Options\nif an attribute is excluded, any value found in `options` referring to it will be ignored.",
+                "summary": "Get a collection of envelope information of messages",
+                "description": "Returns a list of all `MessageItem`s for the MailAccount with the specified `mailAccountId` and `mailFolderId`. This response returns a list of `MessageItem`s in the boundaries of `start` and `start + limit`; meta-information in the response need to contain the current number of unread messages in the queried mailbox along with the mailbox's identifier (`mailFolderId`) and the associated account (`mailAccountId`) itself. \n<br>\n**The fields `mailFolderId`, `mailAccountId` and `id` must always be available with the response, for each returned entity.**\n\n### Query Parameters\n\n### `limit`\nA client must explicitly set `limit` to -1 if **ALL** items should be returned. `limit` is only considered if no filter with the property `id` is found.\n\n### `attributes`\n\nAllows to define the attributes to return with a MessageItem. Defaults to `*` which means all attributes of a `ListMessageItem` are included.\nTo exclude attributes, append a comma-separated list with the names of attributes to exclude:\n\n**Example:** _All attributes are included (default)_\n```\n?attributes=* \n```\n\n**Example:** _Only `previewText` will be included in the set of attributes_\n```\n?attributes=previewText \n```\n\n**Example:** _`subject` and `previewText` will not be included in the set of attributes_\n```\n?attributes=*,previewText,subject \n```\n\n### `filter`\n\nA **json-encoded** string providing additional filter to consider. Must be an array of filter-objects. Multiple filter objects are considered as logical `OR` conditionals.\nIf the server does not understand the filter, a 400-response **MUST** be returned.\nTo group `filter` as logical `AND`, use Arrays of Arrays.\n\n\n#### Filter configuration\n- `property`\n    <br>The `property`-key **SHOULD** be an attribute the server understands.\n- `value`\n    <br>The `value`-key **SHOULD** be a a value for the `property`. The format is arbitrary.\n- `operator`\n    <br>The `operator`-key **SHOULD** be the operator that is used for comparing a list of data with the `property`s `value`. The default operator used is `=`\n         <br>(The following examples use json-decoded data for demonstration purposes.)\n         <br>\n    **Example:** _Getting messages flagged as `recent`._\n    ```\n    ?filter=[{\"property\": \"recent\", \"value\": true}]\n    ```\n    **Example:** _Getting messages flagged as `recent`, **OR** messages flagged as `unseen` with an `id` greater than 1657._\n    ```\n    ?filter=[{\"property\": \"recent\", \"value\": true}, [{\"property\": \"unseen\", \"value\": true}, {\"property\": \"id\", \"value\": 1657, \"operator\": \">\"}]]\n    ```\n    **Example:** _Getting only a specific set of messages based on their `id`s:\n    ```\n    ?filter=[{\"property\": \"id\", \"value\": [\"89678\", \"45\", \"98798\"], \"operator\": \"in\"}]\n    ```\n\n\n\n### `options`\n\nA **json-encoded** string providing additional options for the attributes.\n\n- `previewText`\n    <br>The `previewText`-attribute **MUST** be allowed to be configured with:\n           <br> - `length` this allows to specify the length of the `previewText` to return\n    <br>The `previewText`-attribute **MUST NOT**, but **SHOULD**,  be allowed to be configured with:\n           <br> - `trimApi` if `length` is specified, `trimApi` requests the implementing backend to read out the complete text before trimming it. This can prevent charset decoding issues, but increases load-times (defaults to `false`).\n           <br> apply options to `html`/`plain`: If the backend supports it, the client should be able to chose which content type of the message should be previewed. The option `precedence` should be submitted to tell which content type should be preferred. A lookup for the other content type is then skipped. \n           <br>(The following examples use json-decoded data for demonstration purposes.)\n    \n    **Example:** _Preview Text is returned with a max. of 200 characters._\n    ```\n    ?options={previewText: {length:200}} \n    ```\n    **Example:** _Preview Text is returned with a max. of 200 characters, trimming should be done by the backend._\n    ```\n    ?options={previewText: {length:200, trimApi: true}} \n    ```\n    **Example:** _Preview Text configured to first look up content type `plain`, then content type `html` to generate the previewText:_\n    ```\n    ?options={previewText: {plain: {length: 200, trimApi: true, precedence: true}}, {html: {length: 200, trimApi: true}} \n    ``` \n    \n    If `plain` and `html` are omitted, the options configured for `previewText` should be internally get applied to both content types.\n    **Default**: The `previewText`s default setting should be, if nothing else specified:\n    ```json\n      previewText: {\n        plain: {\n            precedence: true,\n            length: 200,\n            trimApi: true\n        },\n        html: {\n            length: 200,\n            trimApi: true\n        }\n    }\n    ```\n    \n##### Ignored Options\nif an attribute is excluded, any value found in `options` referring to it will be ignored.",
                 "operationId": "getMessageItems",
                 "parameters": [
                     {
@@ -201,10 +201,6 @@
                                                 },
                                                 "mailAccountId": {
                                                     "type": "string"
-                                                },
-                                                "uidNext": {
-                                                    "type": "string",
-                                                    "description": "Optional. The UID to be assigned to the next message in the currently selected folder, if supported by the server."
                                                 }
                                             }
                                         },
@@ -259,29 +255,19 @@
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "": {
-                                            "type": "string"
-                                        }
-                                    }
-                                },
-                                "examples": {}
-                            },
-                            "application/xml": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {}
-                                }
-                            }
-                        }
+                        "description": "Bad Request - the client sent a request the API could not understand"
                     },
                     "401": {
-                        "description": "Unauthorized"
+                        "description": "Unauthorized - the client is not authenticated."
+                    },
+                    "403": {
+                        "description": "Forbidden - the resource may not be accessed by the client."
+                    },
+                    "404": {
+                        "description": "Not Found - if the MessageItem with the specified messageItemId does not exist."
+                    },
+                    "500": {
+                        "description": "Internal Server Error - if the implementing API encountered an internal error."
                     }
                 }
             },
@@ -289,22 +275,11 @@
                 "tags": [
                     "MessageDraft"
                 ],
-                "summary": "Creates a new draft",
-                "description": "Creates a new draft for the specified MailAccount and stores it in the MailBox with the specified mailFolderId",
+                "summary": "Create a new message as a draft",
+                "description": "Creates a new draft for the specified `MailAccount` and stores it in the `MailBox` identified with `mailFolderId`",
                 "operationId": "postMessageBodyDraft",
                 "parameters": [
                     {
-                        "name": "target",
-                        "in": "query",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "enum": [
-                                "MessageBodyDraft"
-                            ]
-                        }
-                    },
-                    {
                         "$ref": "#/components/parameters/mailAccountId"
                     },
                     {
@@ -313,48 +288,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "The created MessageBodyDraft",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean"
-                                        },
-                                        "data": {
-                                            "$ref": "#/components/schemas/MessageBodyDraft"
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId}/MessageItems/{messageItemId}&target=MessageBody": {
-            "get": {
-                "tags": [
-                    "MessageBody"
-                ],
-                "summary": "Return message body",
-                "description": "Returns the MessageBody for the specified key fragments",
-                "operationId": "getMessageBody",
-                "parameters": [
-                    {
-                        "$ref": "#/components/parameters/mailAccountId"
-                    },
-                    {
-                        "$ref": "#/components/parameters/mailFolderId"
-                    },
-                    {
-                        "$ref": "#/components/parameters/messageItemId"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The MessageBody found for the specified MailAccount, MailFolder and message id",
+                        "description": "The created MessageBody",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -370,17 +304,97 @@
                                 }
                             }
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized - the client is not authenticated."
+                    },
+                    "403": {
+                        "description": "Forbidden - the resource may not be accessed by the client."
+                    },
+                    "404": {
+                        "description": "Not Found - if the resource for the specified `mailAccountId` and `mailFolderId` does not exist."
+                    },
+                    "500": {
+                        "description": "Internal Server Error - if the implementing API encountered an internal error."
+                    },
+                    "": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/MessageBody"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "type": {
+                                        "type": "string"
+                                    },
+                                    "mailAccountId": {
+                                        "type": "string"
+                                    },
+                                    "mailFolderId": {
+                                        "type": "string"
+                                    },
+                                    "attributes": {
+                                        "type": "object",
+                                        "properties": {
+                                            "textPlain": {
+                                                "type": "string"
+                                            },
+                                            "textHtml": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                },
+                                "required": [
+                                    "type",
+                                    "mailAccountId",
+                                    "mailFolderId"
+                                ]
+                            }
+                        }
                     }
                 }
-            }
+            },
+            "parameters": [
+                {
+                    "schema": {
+                        "type": "string"
+                    },
+                    "name": "mailAccountId",
+                    "in": "path",
+                    "required": true
+                },
+                {
+                    "schema": {
+                        "type": "string"
+                    },
+                    "name": "mailFolderId",
+                    "in": "path",
+                    "required": true
+                }
+            ]
         },
-        "/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId}/MessageItems/{messageItemId}&target=MessageItem": {
+        "/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId}/MessageItems/{messageItemId}": {
             "get": {
                 "tags": [
                     "MessageItem"
                 ],
-                "summary": "Return message item",
-                "description": "Returns the MessageItem for the specified key fragments.\n<br>The query parameters `fields` and `excludeFields` are mutually exclusive.",
+                "summary": "Return envelope information of a single message",
+                "description": "Returns the single `MessageItem` for the specified key fragments.\nThe API does not distinguish between  requesting a `MessageDraft` or a `MessageItem`, since envelope informations are all the same. It is up to the client to render the information given the specific context (i.e. read or edit).\n\n### Query Parameters\n\n### `attributes`\n\nAllows to define the attributes to return with a `MessageItem`. Defaults to `*` which means all attributes of a `MessageItem` are included.\nTo exclude attributes, append a comma-separated list with the names of attributes to exclude:\n\n**Example:** _All attributes are included (default)_\n```\n?attributes=* \n```\n\n**Example:** _Only `hasAttachments` will be included in the set of attributes_\n```\n?attributes=hasAttachments\n```\n\n**Example:** _`subject` and `previewText` will not be included in the set of attributes_\n```\n?attributes=*,previewText,subject \n```",
                 "operationId": "getMessageItem",
                 "parameters": [
                     {
@@ -394,24 +408,16 @@
                     },
                     {
                         "schema": {
-                            "type": "array"
-                        },
-                        "in": "query",
-                        "description": "The list of fields to retrieve for the message item. Will return all fields if omitted.",
-                        "name": "fields"
-                    },
-                    {
-                        "schema": {
                             "type": "string"
                         },
                         "in": "query",
-                        "name": "excludeFields",
-                        "description": "An array of fields to exclude from the response. "
+                        "name": "attributes",
+                        "description": "The list of attributes to include or exclude for the message item. * retrieves all, * followed by attribute names excludes the specified attributes. Attributes only w/o * returns only the specified attributes."
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "The MessageItem found for the specified MailAccount, MailFolder and message id",
+                        "description": "The `MessageItem` found for the specified `mailAccountId`, `mailFolderId` and `messageItemId`",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -427,15 +433,117 @@
                                 }
                             }
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized - the client is not authenticated."
+                    },
+                    "403": {
+                        "description": "Forbidden - the resource may not be accessed by the client."
+                    },
+                    "404": {
+                        "description": "Not Found - if the MessageItem with the specified messageItemId does not exist."
+                    },
+                    "500": {
+                        "description": "Internal Server Error - if the implementing API encountered an internal error."
                     }
                 }
             },
-            "put": {
+            "parameters": [
+                {
+                    "schema": {
+                        "type": "string"
+                    },
+                    "name": "mailAccountId",
+                    "in": "path",
+                    "required": true
+                },
+                {
+                    "schema": {
+                        "type": "string"
+                    },
+                    "name": "mailFolderId",
+                    "in": "path",
+                    "required": true
+                },
+                {
+                    "schema": {
+                        "type": "string"
+                    },
+                    "name": "messageItemId",
+                    "in": "path",
+                    "required": true
+                }
+            ],
+            "delete": {
+                "summary": "Delete a message",
+                "operationId": "deleteMessage",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "401": {
+                        "description": "Unauthorized - the client is not authenticated."
+                    },
+                    "403": {
+                        "description": "Forbidden - the resource may not be accessed by the client."
+                    },
+                    "404": {
+                        "description": "Not Found - if the MessageItem does not exist."
+                    },
+                    "500": {
+                        "description": "Internal Server Error - if the implementing API encountered an internal error."
+                    }
+                },
+                "description": "Entirely deletes a Message, including all associated `Attachments` and the `MessageBody`.",
+                "tags": [
+                    "MessageItem"
+                ]
+            },
+            "post": {
+                "summary": "Send a message",
+                "operationId": "sendMessageDraft",
+                "responses": {
+                    "200": {
+                        "description": "OK - If the message was sent, the API responds with a Status Code of `200`. ",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - the client is not authenticated."
+                    },
+                    "403": {
+                        "description": "Forbidden - the resource may not be accessed by the client."
+                    },
+                    "404": {
+                        "description": "Not Found - if the Message does not exist."
+                    },
+                    "405": {
+                        "description": "Method Not Allowed - If the Message is not flagged as `DRAFT`"
+                    },
+                    "500": {
+                        "description": "Internal Server Error - if the implementing API encountered an internal error."
+                    }
+                },
+                "description": "Sends the message represented by the Path Params. The message must be flagged as `DRAFT` in order for the operation to succeed.\n\nThe `POST`-operation does not require any parameters.\n\nSending a message means that a server-connection configured with the `MailAccount` was established and the data of the message was successfully assembled to meet the server's protocol-requirements for sending it. If the response represents a successful operation, implementing clients can then take care of deleting the sent message from its source folder and/or move/copy it to a new destination folder (e.g. _Sent_-folder), if applicable."
+            }
+        },
+        "/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId}/MessageItems/{messageItemId}/MessageItem": {
+            "patch": {
                 "tags": [
                     "MessageItem"
                 ],
-                "summary": "Updates MessageItem",
-                "description": "Updates the specific MessageItem with the submitted information.",
+                "summary": "Move/Flag a message",
+                "description": "Updates the specific `MessageItem` with the submitted information.\nThe client can move a message to a different MailFolder by explicitely setting the `mailFolderId`-value in the `attribute` bag.\n\nIt is possible that the server decides to store the message under a new `id` if a message was moved to a new location. The returned keys must reflect the changes, and the client must inspect the keys to make sure data is properly updated.\n\n**Note:**\nIf fields of a message are updated and its id changes, the backend **MUST** consider the new resource location for all related entities of **THIS** message, such as its body and its attachments. The client has to take care of applying the newly created key fragments to existing entities currently used in memory, either dynamically or by triggering a complete reload of the updated message.",
                 "operationId": "putMessageItem",
                 "parameters": [
                     {
@@ -446,66 +554,6 @@
                     },
                     {
                         "$ref": "#/components/parameters/messageItemId"
-                    },
-                    {
-                        "name": "origin",
-                        "required": false,
-                        "description": "Required to let the server know that the operation on the MessageItem is related to a recently created message, i.e. if the request is chained by creating a MessageDraft, for which now the envelope information should be updated.",
-                        "in": "query",
-                        "schema": {
-                            "type": "string",
-                            "enum": [
-                                "create"
-                            ]
-                        }
-                    },
-                    {
-                        "name": "action",
-                        "required": false,
-                        "description": "Requests a move operation for the specified MessageItem. Requires additional query-parameter `mailFolderId`",
-                        "in": "query",
-                        "schema": {
-                            "type": "string",
-                            "enum": [
-                                "move"
-                            ]
-                        }
-                    },
-                    {
-                        "name": "mailFolderId",
-                        "required": false,
-                        "description": "A new location for the MessageItem, if `action` represents a `move`-operation. Not to be confused with the path-parameter `{mailFolderId}`, which is required to identify the resource. The response must contain the MessageItem for this type of request.",
-                        "in": "query",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "seen",
-                        "required": false,
-                        "description": "Marks the MessageItem as seen/unseen",
-                        "in": "query",
-                        "schema": {
-                            "type": "boolean"
-                        }
-                    },
-                    {
-                        "name": "flagged",
-                        "required": false,
-                        "description": "Marks the MessageItem as flagged/un-flagged",
-                        "in": "query",
-                        "schema": {
-                            "type": "boolean"
-                        }
-                    },
-                    {
-                        "name": "draft",
-                        "required": false,
-                        "description": "Marks the MessageItem as a draft",
-                        "in": "query",
-                        "schema": {
-                            "type": "boolean"
-                        }
                     }
                 ],
                 "responses": {
@@ -528,8 +576,799 @@
                                 }
                             }
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized - the client is not authenticated."
+                    },
+                    "403": {
+                        "description": "Forbidden - the resource may not be accessed by the client."
+                    },
+                    "404": {
+                        "description": "Not Found - if the MessageItem does not exist."
+                    },
+                    "500": {
+                        "description": "Internal Server Error - if the implementing API encountered an internal error."
+                    }
+                },
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "data": {
+                                        "type": "object",
+                                        "required": [
+                                            "type",
+                                            "mailAccountId",
+                                            "mailFolderId",
+                                            "id",
+                                            "attributes"
+                                        ],
+                                        "properties": {
+                                            "type": {
+                                                "type": "string"
+                                            },
+                                            "mailAccountId": {
+                                                "type": "string"
+                                            },
+                                            "mailFolderId": {
+                                                "type": "string"
+                                            },
+                                            "id": {
+                                                "type": "string"
+                                            },
+                                            "attributes": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "draft": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "flagged": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "seen": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "mailFolderId": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "required": [
+                                    "data"
+                                ]
+                            },
+                            "examples": {
+                                "moving a MessageItem": {
+                                    "value": {
+                                        "data": {
+                                            "type": "MessageItem",
+                                            "mailAccountId": "dev",
+                                            "mailFolderId": "INBOX.Drafts",
+                                            "id": "234424",
+                                            "attributes": {
+                                                "mailFolderId": "INBOX.Trash"
+                                            }
+                                        }
+                                    }
+                                },
+                                "updating the flags of a MessageItem": {
+                                    "value": {
+                                        "data": {
+                                            "type": "MessageItem",
+                                            "mailAccountId": "dev",
+                                            "mailFolderId": "INBOX.Drafts",
+                                            "id": "234424",
+                                            "attributes": {
+                                                "seen": true,
+                                                "flagged": true
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "description": ""
+                }
+            },
+            "parameters": [
+                {
+                    "schema": {
+                        "type": "string"
+                    },
+                    "name": "mailAccountId",
+                    "in": "path",
+                    "required": true
+                },
+                {
+                    "schema": {
+                        "type": "string"
+                    },
+                    "name": "mailFolderId",
+                    "in": "path",
+                    "required": true
+                },
+                {
+                    "schema": {
+                        "type": "string"
+                    },
+                    "name": "messageItemId",
+                    "in": "path",
+                    "required": true
+                }
+            ]
+        },
+        "/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId}/MessageItems/{messageItemId}/MessageDraft": {
+            "patch": {
+                "tags": [
+                    "MessageItem"
+                ],
+                "summary": "Updates a message as a draft",
+                "description": "Updates the specific `MessageDraft` with the submitted information.\nIt is possible that the server decides to store the message under a new `id`. The returned keys must reflect the changes, and the client must inspect the keys to make sure data is properly updated.\n\n**Note:**\nIf fields of a message are updated and its id changes, the backend **MUST** consider the new resource location for all related entities of **THIS** message, such as its body and its attachments. The client has to take care of applying the newly created key fragments to existing entities currently used in memory, either dynamically or by triggering a complete reload of the updated message.",
+                "operationId": "putMessageItem",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/mailAccountId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/mailFolderId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/messageItemId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The updated message information",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "oneOf": [
+                                        {
+                                            "$ref": "#/components/schemas/putMessageItemResponse"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/moveMessageItemResponse"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/moveMessageItemResponse"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - the client is not authenticated."
+                    },
+                    "403": {
+                        "description": "Forbidden - the resource may not be accessed by the client."
+                    },
+                    "404": {
+                        "description": "Not Found - if the MessageItem does not exist."
+                    },
+                    "500": {
+                        "description": "Internal Server Error - if the implementing API encountered an internal error."
+                    }
+                },
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "data": {
+                                        "type": "object",
+                                        "required": [
+                                            "type",
+                                            "mailAccountId",
+                                            "mailFolderId",
+                                            "id",
+                                            "attributes"
+                                        ],
+                                        "properties": {
+                                            "type": {
+                                                "type": "string"
+                                            },
+                                            "mailAccountId": {
+                                                "type": "string"
+                                            },
+                                            "mailFolderId": {
+                                                "type": "string"
+                                            },
+                                            "id": {
+                                                "type": "string"
+                                            },
+                                            "attributes": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "to": {
+                                                        "type": "string",
+                                                        "description": "JSON-encoded representation of an EmailAddress"
+                                                    },
+                                                    "cc": {
+                                                        "type": "string",
+                                                        "description": "JSON-encoded representation of a list of EmailAddresses"
+                                                    },
+                                                    "bcc": {
+                                                        "type": "string",
+                                                        "description": "JSON-encoded representation of a list of EmailAddresses"
+                                                    },
+                                                    "date": {
+                                                        "type": "string",
+                                                        "description": "client's UNIX Timestamp representing date of creation "
+                                                    },
+                                                    "draft": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "flagged": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "from": {
+                                                        "type": "string",
+                                                        "description": "JSON-encoded representation of an EmailAddress"
+                                                    },
+                                                    "inReplyTo": {
+                                                        "type": "string"
+                                                    },
+                                                    "references": {
+                                                        "type": "string"
+                                                    },
+                                                    "replyTo": {
+                                                        "type": "string",
+                                                        "description": "JSON-encoded representation of an EmailAddress"
+                                                    },
+                                                    "seen": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "subject": {
+                                                        "type": "string"
+                                                    },
+                                                    "xCnDraftInfo": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "required": [
+                                    "data"
+                                ]
+                            },
+                            "examples": {
+                                "updating a MessageDraft with a new subject": {
+                                    "value": {
+                                        "data": {
+                                            "type": "MessageDraft",
+                                            "mailAccountId": "dev",
+                                            "mailFolderId": "INBOX.Drafts",
+                                            "id": "234424",
+                                            "attributes": {
+                                                "subject": "Hello World"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "description": ""
+                }
+            },
+            "parameters": [
+                {
+                    "schema": {
+                        "type": "string"
+                    },
+                    "name": "mailAccountId",
+                    "in": "path",
+                    "required": true
+                },
+                {
+                    "schema": {
+                        "type": "string"
+                    },
+                    "name": "mailFolderId",
+                    "in": "path",
+                    "required": true
+                },
+                {
+                    "schema": {
+                        "type": "string"
+                    },
+                    "name": "messageItemId",
+                    "in": "path",
+                    "required": true
+                }
+            ]
+        },
+        "/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId}/MessageItems/{messageItemId}/MessageBody": {
+            "get": {
+                "tags": [
+                    "MessageBody"
+                ],
+                "summary": "Return the body of a message",
+                "description": "Returns the single `MessageBody` for the specified key fragments.",
+                "operationId": "getMessageBody",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/mailAccountId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/mailFolderId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/messageItemId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The `MessageBody` found for the specified `mailAccountId`, `mailFolderId` and `messageItemId`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/MessageBody"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - the client is not authenticated."
+                    },
+                    "403": {
+                        "description": "Forbidden - the resource may not be accessed by the client."
+                    },
+                    "404": {
+                        "description": "Not Found - if the `MessageBody` for the specified specified `mailAccountId`, `mailFolderId` and `messageItemId` does not exist."
+                    },
+                    "500": {
+                        "description": "Internal Server Error - if the implementing API encountered an internal error."
                     }
                 }
+            },
+            "parameters": [
+                {
+                    "schema": {
+                        "type": "string"
+                    },
+                    "name": "mailAccountId",
+                    "in": "path",
+                    "required": true
+                },
+                {
+                    "schema": {
+                        "type": "string"
+                    },
+                    "name": "mailFolderId",
+                    "in": "path",
+                    "required": true
+                },
+                {
+                    "schema": {
+                        "type": "string"
+                    },
+                    "name": "messageItemId",
+                    "in": "path",
+                    "required": true
+                }
+            ],
+            "patch": {
+                "summary": "Update the body of a message",
+                "operationId": "updateMessageBody",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Bad Request - the client sent a request the API could not understand"
+                    },
+                    "401": {
+                        "description": "Unauthorized - the client is not authenticated."
+                    },
+                    "403": {
+                        "description": "Forbidden - the resource may not be accessed by the client."
+                    },
+                    "404": {
+                        "description": "Not Found - if the MessageBody does not exist."
+                    },
+                    "500": {
+                        "description": "Internal Server Error - if the implementing API encountered an internal error.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {
+                                            "type": "number"
+                                        },
+                                        "detail": {
+                                            "type": "string"
+                                        },
+                                        "title": {
+                                            "type": "string"
+                                        },
+                                        "instance": {
+                                            "type": "string"
+                                        },
+                                        "type": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "MessageBody"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "data": {
+                                        "type": "object",
+                                        "required": [
+                                            "type",
+                                            "mailAccountId",
+                                            "mailFolderId",
+                                            "id",
+                                            "attributes"
+                                        ],
+                                        "properties": {
+                                            "type": {
+                                                "type": "string"
+                                            },
+                                            "mailAccountId": {
+                                                "type": "string"
+                                            },
+                                            "mailFolderId": {
+                                                "type": "string"
+                                            },
+                                            "id": {
+                                                "type": "string"
+                                            },
+                                            "attributes": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "textPlain": {
+                                                        "type": "string"
+                                                    },
+                                                    "textHtml": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "required": [
+                                    "data"
+                                ]
+                            },
+                            "examples": {
+                                "Updating a MessageBody": {
+                                    "value": {
+                                        "data": {
+                                            "type": "MessageBody",
+                                            "mailAccountId": "dev",
+                                            "mailFolderId": "INBOX.Drafts",
+                                            "id": "324234",
+                                            "attributes": {
+                                                "textPlain": "Hello World",
+                                                "textHtml": "<b>Hello World</b>"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "description": ""
+                },
+                "description": "Updates the `MessageBody` of the message represented by the key fragments."
+            }
+        },
+        "/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId}/MessageItems/{parentMessageItemId}/Attachments": {
+            "get": {
+                "summary": "Get a list of attachments",
+                "description": "Returns a list of all `FileAttachmentItem`s for the MailAccount with the specified `mailAccountId` and `mailFolderId`. \n<br>\n**The fields `mailFolderId`, `mailAccountId`, `parentMessageitemId` and `id` must always be available with the response, for each returned entity.**\n",
+                "operationId": "getAttachmentList",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/mailAccountId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/mailFolderId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A list of FileAttachmentItems. ",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/FileAttachmentItem"
+                                            }
+                                        }
+                                    }
+                                },
+                                "examples": {
+                                    "Attachment response example": {
+                                        "value": {
+                                            "success": true,
+                                            "data": [
+                                                {
+                                                    "id": "1",
+                                                    "mailAccountId": "siteartwork",
+                                                    "mailFolderId": "INBOX",
+                                                    "parentMessageItemId": "181317",
+                                                    "type": "image/png",
+                                                    "text": "newmail.png",
+                                                    "size": 21884,
+                                                    "downloadUrl": "data:image/png;base64,longstring",
+                                                    "previewImgSrc": "data:image/png;base64,longstring"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "Attachments"
+                ]
+            },
+            "post": {
+                "summary": "Create new attachments",
+                "description": "Creates new Attachments for the specified MessageItem.",
+                "operationId": "postAttachment",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/mailAccountId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/mailFolderId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The created attachments as a list of FileAttachmentItems",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/FileAttachmentItem"
+                                        }
+                                    }
+                                }
+                            },
+                            "application/x-www-form-urlencoded": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {}
+                                }
+                            },
+                            "application/xml": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {}
+                                }
+                            }
+                        }
+                    }
+                },
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "files": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "text": {
+                                                    "type": "string"
+                                                },
+                                                "type": {
+                                                    "type": "string"
+                                                },
+                                                "localId": {
+                                                    "type": "string"
+                                                },
+                                                "mailAccountId": {
+                                                    "type": "string"
+                                                },
+                                                "mailFolderId": {
+                                                    "type": "string"
+                                                },
+                                                "parentMessageItemId": {
+                                                    "type": "string"
+                                                },
+                                                "blob": {
+                                                    "type": "object"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "examples": {
+                                "Payload example": {
+                                    "value": {
+                                        "data[0][text]": "streamdeck_key (16).png",
+                                        "data[0][type]": "image/png",
+                                        "file[0][0]": "(binary)",
+                                        "data[0][localId]": "DraftAttachment-1",
+                                        "data[0][mailAccountId]": "siteartwork",
+                                        "data[0][mailFolderId]": "INBOX.Drafts",
+                                        "data[0][parentMessageItemId]": "561"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "description": "The form data for an attachment file."
+                },
+                "tags": [
+                    "Attachments"
+                ]
+            },
+            "parameters": [
+                {
+                    "schema": {
+                        "type": "string"
+                    },
+                    "name": "mailAccountId",
+                    "in": "path",
+                    "required": true
+                },
+                {
+                    "schema": {
+                        "type": "string"
+                    },
+                    "name": "mailFolderId",
+                    "in": "path",
+                    "required": true
+                },
+                {
+                    "schema": {
+                        "type": "string"
+                    },
+                    "name": "parentMessageItemId",
+                    "in": "path",
+                    "description": "the id of the owning message",
+                    "required": true
+                }
+            ]
+        },
+        "/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId}/MessageItems/{parentMessageItemId}/Attachments/{id}": {
+            "parameters": [
+                {
+                    "schema": {
+                        "type": "string"
+                    },
+                    "name": "mailAccountId",
+                    "in": "path",
+                    "required": true
+                },
+                {
+                    "schema": {
+                        "type": "string"
+                    },
+                    "name": "mailFolderId",
+                    "in": "path",
+                    "required": true
+                },
+                {
+                    "schema": {
+                        "type": "string"
+                    },
+                    "name": "parentMessageItemId",
+                    "in": "path",
+                    "description": "the id of the owning message",
+                    "required": true
+                },
+                {
+                    "schema": {
+                        "type": "string"
+                    },
+                    "name": "id",
+                    "in": "path",
+                    "required": true,
+                    "description": "the id of the referenced attachment"
+                }
+            ],
+            "delete": {
+                "summary": "Delete an attachment",
+                "operationId": "deleteAttachment",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "description": "Indicates the successful deletion of an attachment.",
+                                            "default": true,
+                                            "readOnly": true
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/MessageKey"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "default": false,
+                                            "readOnly": true
+                                        },
+                                        "data": {
+                                            "nullable": true
+                                        }
+                                    }
+                                }
+                            },
+                            "application/xml": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {}
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [],
+                "description": "Deletes the attachment with the given id. The data returned is the key of the owning message, containing the **updated key information**: If deleting the attachment triggered the owning resource to change its location, the updated key must reflect this.   ",
+                "tags": [
+                    "Attachments"
+                ]
             }
         }
     },
@@ -677,25 +1516,19 @@
                 "allOf": [
                     {
                         "$ref": "#/components/schemas/MessageKey"
-                    }
-                ],
-                "type": "object",
-                "properties": {
-                    "textHtml": {
-                        "type": "string"
                     },
-                    "textPlain": {
-                        "type": "string"
-                    }
-                }
-            },
-            "MessageBodyDraft": {
-                "allOf": [
                     {
-                        "$ref": "#/components/schemas/MessageKey"
+                        "type": "object",
+                        "properties": {
+                            "textHtml": {
+                                "type": "string"
+                            },
+                            "textPlain": {
+                                "type": "string"
+                            }
+                        }
                     }
                 ],
-                "type": "object",
                 "properties": {
                     "textHtml": {
                         "type": "string"
@@ -703,7 +1536,17 @@
                     "textPlain": {
                         "type": "string"
                     }
-                }
+                },
+                "x-examples": {
+                    "example-1": {
+                        "textHtml": "string",
+                        "textPlain": "string",
+                        "id": "string",
+                        "mailAccountId": "string",
+                        "mailFolderId": "string"
+                    }
+                },
+                "description": "The body of a message, containing content of the type text/html and/or text/plain."
             },
             "MessageItem": {
                 "allOf": [
@@ -722,10 +1565,25 @@
                                     "$ref": "#/components/schemas/EmailAddress"
                                 }
                             },
-                            "subject": {
-                                "type": "string"
+                            "cc": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/EmailAddress"
+                                }
+                            },
+                            "bcc": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/EmailAddress"
+                                }
+                            },
+                            "replyTo": {
+                                "$ref": "#/components/schemas/EmailAddress"
                             },
                             "date": {
+                                "type": "string"
+                            },
+                            "subject": {
                                 "type": "string"
                             },
                             "seen": {
@@ -754,6 +1612,9 @@
                             },
                             "hasAttachments": {
                                 "type": "boolean"
+                            },
+                            "previewText": {
+                                "type": "string"
                             }
                         },
                         "required": [
@@ -761,7 +1622,7 @@
                         ]
                     }
                 ],
-                "description": "A `MessageItem` represents the base structure for message item entities.\n`MessageItem`s must always provide the `mailAccountId`, `mailFolderId`, and `id` to uniquely identify them. ",
+                "description": "Models envelope information of message items.\n`MessageItem`s must always provide the `mailAccountId`, `mailFolderId`, and `id` to uniquely identify them. \nImplementing APIs are advised to consider a query-parameter that provides information about the set of fields the client expects with a response.",
                 "title": "MessageItem",
                 "x-examples": {
                     "MessageItem": {
@@ -778,51 +1639,24 @@
                                 "name": "string"
                             }
                         ],
-                        "subject": "string",
-                        "date": "string",
-                        "seen": true,
-                        "answered": true,
-                        "draft": true,
-                        "flagged": true,
-                        "recent": true,
-                        "references": "string",
-                        "messageId": "string"
-                    }
-                }
-            },
-            "ListMessageItem": {
-                "allOf": [
-                    {
-                        "$ref": "#/components/schemas/MessageItem"
-                    },
-                    {
-                        "type": "object",
-                        "properties": {
-                            "previewText": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                ],
-                "description": "A `ListMessageItem` represents a single Message containing envelope information and a `previewText` attribute for previewing the contents of the message. ",
-                "title": "ListMessageItem",
-                "x-examples": {
-                    "Single ListMessageItem": {
-                        "id": "string",
-                        "mailAccountId": "string",
-                        "mailFolderId": "string",
-                        "from": {
-                            "address": "string",
-                            "name": "string"
-                        },
-                        "to": [
+                        "cc": [
                             {
                                 "address": "string",
                                 "name": "string"
                             }
                         ],
-                        "subject": "string",
+                        "bcc": [
+                            {
+                                "address": "string",
+                                "name": "string"
+                            }
+                        ],
+                        "replyTo": {
+                            "address": "string",
+                            "name": "string"
+                        },
                         "date": "string",
+                        "subject": "string",
                         "seen": true,
                         "answered": true,
                         "draft": true,
@@ -830,7 +1664,8 @@
                         "recent": true,
                         "references": "string",
                         "messageId": "string",
-                        "previewText": "string"
+                        "size": 0,
+                        "hasAttachments": true
                     }
                 }
             },
@@ -864,6 +1699,15 @@
             },
             "MessageKey": {
                 "type": "object",
+                "description": "A composite key that consists of the attributes `mailAccountId`, `mailFolderId` and `id`. Uniquely identifies a message-entity occurrence. ",
+                "title": "MessageKey",
+                "x-examples": {
+                    "MessageKey example": {
+                        "id": "123",
+                        "mailAccountId": "conjoon",
+                        "mailFolderId": "INBOX"
+                    }
+                },
                 "properties": {
                     "id": {
                         "type": "string"
@@ -873,15 +1717,6 @@
                     },
                     "mailFolderId": {
                         "type": "string"
-                    }
-                },
-                "description": "A composite key that consists of the attributes `mailAccountId`, `mailFolderId` and `id`. Uniquely identifies a message-entity occurrence. ",
-                "title": "MessageKey",
-                "x-examples": {
-                    "MessageKey example": {
-                        "id": "123",
-                        "mailAccountId": "conjoon",
-                        "mailFolderId": "INBOX"
                     }
                 }
             },
@@ -903,6 +1738,56 @@
                         "name": "conjoon maintainer"
                     }
                 }
+            },
+            "FileAttachmentItem": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/AttachmentKey"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "downloadUrl": {
+                                "type": "string",
+                                "description": "The download uri for the attachment the client understands, e.g. a data uri."
+                            },
+                            "previewImgSrc": {
+                                "type": "string",
+                                "description": "A computed src for a preview of the attachment the client understands, e.g. a data uri."
+                            },
+                            "size": {
+                                "type": "string",
+                                "description": "The size of the attachment in bytes."
+                            },
+                            "text": {
+                                "type": "string",
+                                "description": "The name of the attachment, e.g. the file name."
+                            },
+                            "type": {
+                                "type": "string",
+                                "description": "The mime type of the attachment."
+                            }
+                        }
+                    }
+                ],
+                "description": "Attachment data to be returned by the API to the requesting client.",
+                "title": "FileAttachmentItem"
+            },
+            "AttachmentKey": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/MessageKey"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "parentMessageItemId": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                ],
+                "description": "A composite key that consists of the attributes `mailAccountId`, `mailFolderId`, `id` and `parentMessageItemId`. Uniquely identifies an attachment belonging to a MessageItem. "
             }
         },
         "securitySchemes": {
