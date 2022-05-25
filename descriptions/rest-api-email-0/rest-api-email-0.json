@@ -37,7 +37,7 @@
           "MailAccounts"
         ],
         "summary": "Lists mail accounts",
-        "description": "Lists available mail accounts for the specified login",
+        "description": "Lists available mail accounts for the client",
         "operationId": "getMailAccounts",
         "responses": {
           "200": {
@@ -1510,8 +1510,8 @@
           "outbox_password": {
             "type": "string"
           },
-          "outbox_ssl": {
-            "type": "boolean"
+          "outbox_secure": {
+            "type": "string"
           }
         }
       },
