@@ -55,42 +55,12 @@
                     }
                   }
                 },
-                "examples": {
-                  "example-1": {
-                    "value": {
-                      "data": [
-                        {
-                          "id": "gmail",
-                          "type": "MailAccount",
-                          "attributes": {
-                            "name": "Google Mail",
-                            "folderType": "account",
-                            "from": "email@gmail.com",
-                            "replyTo": "replay-to-email@gmail.com",
-                            "inbox_address": "imap.google.com",
-                            "inbox_port": "992",
-                            "inbox_user": "user",
-                            "inbox_password": "password",
-                            "inbox_ssl": true,
-                            "outbox_address": "string",
-                            "outbox_port": "string",
-                            "outbox_user": "string",
-                            "outbox_password": "string",
-                            "outbox_ssl": true
-                          }
-                        }
-                      ]
-                    }
-                  }
-                }
+                "examples": {}
               }
             }
           },
           "401": {
-            "description": "Returned if the requesting client is not logged in."
-          },
-          "403": {
-            "description": "Returned if the requesting client is logged in, but may not access the resource."
+            "description": "Returned if the requesting client is not authenticated."
           }
         }
       }
