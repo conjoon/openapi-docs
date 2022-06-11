@@ -37,29 +37,60 @@
           "MailAccounts"
         ],
         "summary": "Lists mail accounts",
-        "description": "Lists available mail accounts for the client",
+        "description": "Returns a list of all available `MailAccounts` for the client.",
         "operationId": "getMailAccounts",
         "responses": {
           "200": {
-            "description": "Available MailAccounts",
+            "description": "List of available `MailAccounts`.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": {
-                      "type": "boolean"
-                    },
                     "data": {
                       "type": "array",
                       "items": {
-                        "$ref": "#/components/schemas/MailAccount"
+                        "$ref": "#/components/schemas/MailAccount_ResourceObject"
                       }
+                    }
+                  }
+                },
+                "examples": {
+                  "example-1": {
+                    "value": {
+                      "data": [
+                        {
+                          "id": "gmail",
+                          "type": "MailAccount",
+                          "attributes": {
+                            "name": "Google Mail",
+                            "folderType": "account",
+                            "from": "email@gmail.com",
+                            "replyTo": "replay-to-email@gmail.com",
+                            "inbox_address": "imap.google.com",
+                            "inbox_port": "992",
+                            "inbox_user": "user",
+                            "inbox_password": "password",
+                            "inbox_ssl": true,
+                            "outbox_address": "string",
+                            "outbox_port": "string",
+                            "outbox_user": "string",
+                            "outbox_password": "string",
+                            "outbox_ssl": true
+                          }
+                        }
+                      ]
                     }
                   }
                 }
               }
             }
+          },
+          "401": {
+            "description": "Returned if the requesting client is not logged in."
+          },
+          "403": {
+            "description": "Returned if the requesting client is logged in, but may not access the resource."
           }
         }
       }
@@ -70,7 +101,7 @@
           "MailFolders"
         ],
         "summary": "List mail boxes",
-        "description": "Returns all available mail boxes belonging to a specific mail account",
+        "description": "Returns a list of available mail boxes for the client and the `MailAccount`.",
         "operationId": "getMailFolders",
         "parameters": [
           {
@@ -79,25 +110,60 @@
         ],
         "responses": {
           "200": {
-            "description": "Available MailFolders belonging to a specific MailAccount",
+            "description": "A list of all available `MailFolders` for the client and the specified `MailAccount`.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": {
-                      "type": "boolean"
-                    },
                     "data": {
                       "type": "array",
                       "items": {
-                        "$ref": "#/components/schemas/MailFolder"
+                        "$ref": "#/components/schemas/MailFolder_ResourceObject"
                       }
+                    }
+                  }
+                },
+                "examples": {
+                  "example-1": {
+                    "value": {
+                      "data": [
+                        {
+                          "id": "string",
+                          "type": "MailFolder",
+                          "attributes": {
+                            "name": "string",
+                            "unreadCount": 0,
+                            "folderType": "string",
+                            "data": [
+                              null
+                            ]
+                          },
+                          "relationships": {
+                            "data": {
+                              "id": "string",
+                              "type": "MailAccount"
+                            },
+                            "links:": {
+                              "related": "string"
+                            }
+                          }
+                        }
+                      ]
                     }
                   }
                 }
               }
             }
+          },
+          "401": {
+            "description": "Returned if the requesting client is not logged in."
+          },
+          "403": {
+            "description": "Returned if the requesting client is not allowed to access the resource."
+          },
+          "404": {
+            "description": "Returned if the specified `MailAccount` was not found."
           }
         }
       }
@@ -108,7 +174,7 @@
           "MessageItem"
         ],
         "summary": "Get a collection of envelope information of messages",
-        "description": "Returns a list of all `MessageItem`s for the MailAccount with the specified `mailAccountId` and `mailFolderId`. This response returns a list of `MessageItem`s in the boundaries of `start` and `start + limit`; meta-information in the response need to contain the current number of unread messages in the queried mailbox along with the mailbox's identifier (`mailFolderId`) and the associated account (`mailAccountId`) itself. \n<br>\n**The fields `mailFolderId`, `mailAccountId` and `id` must always be available with the response, for each returned entity.**\n\n### Query Parameters\n\n### `limit`\nA client must explicitly set `limit` to -1 if **ALL** items should be returned. `limit` is only considered if no filter with the property `id` is found.\n\n### `attributes`\n\nAllows to define the attributes to return with a MessageItem. Defaults to `*` which means all attributes of a `ListMessageItem` are included.\nTo exclude attributes, append a comma-separated list with the names of attributes to exclude:\n\n**Example:** _All attributes are included (default)_\n```\n?attributes=* \n```\n\n**Example:** _Only `previewText` will be included in the set of attributes_\n```\n?attributes=previewText \n```\n\n**Example:** _`subject` and `previewText` will not be included in the set of attributes_\n```\n?attributes=*,previewText,subject \n```\n\n### `filter`\n\nA **json-encoded** string providing additional filter to consider. Must be an array of filter-objects. Multiple filter objects are considered as logical `OR` conditionals.\nIf the server does not understand the filter, a 400-response **MUST** be returned.\nTo group `filter` as logical `AND`, use Arrays of Arrays.\n\n\n#### Filter configuration\n- `property`\n    <br>The `property`-key **SHOULD** be an attribute the server understands.\n- `value`\n    <br>The `value`-key **SHOULD** be a a value for the `property`. The format is arbitrary.\n- `operator`\n    <br>The `operator`-key **SHOULD** be the operator that is used for comparing a list of data with the `property`s `value`. The default operator used is `=`\n         <br>(The following examples use json-decoded data for demonstration purposes.)\n         <br>\n    **Example:** _Getting messages flagged as `recent`._\n    ```\n    ?filter=[{\"property\": \"recent\", \"value\": true}]\n    ```\n    **Example:** _Getting messages flagged as `recent`, **OR** messages flagged as `unseen` with an `id` greater than 1657._\n    ```\n    ?filter=[{\"property\": \"recent\", \"value\": true}, [{\"property\": \"unseen\", \"value\": true}, {\"property\": \"id\", \"value\": 1657, \"operator\": \">\"}]]\n    ```\n    **Example:** _Getting only a specific set of messages based on their `id`s:\n    ```\n    ?filter=[{\"property\": \"id\", \"value\": [\"89678\", \"45\", \"98798\"], \"operator\": \"in\"}]\n    ```\n\n\n\n### `options`\n\nA **json-encoded** string providing additional options for the attributes.\n\n- `previewText`\n    <br>The `previewText`-attribute **MUST** be allowed to be configured with:\n           <br> - `length` this allows to specify the length of the `previewText` to return\n    <br>The `previewText`-attribute **MUST NOT**, but **SHOULD**,  be allowed to be configured with:\n           <br> - `trimApi` if `length` is specified, `trimApi` requests the implementing backend to read out the complete text before trimming it. This can prevent charset decoding issues, but increases load-times (defaults to `false`).\n           <br> apply options to `html`/`plain`: If the backend supports it, the client should be able to chose which content type of the message should be previewed. The option `precedence` should be submitted to tell which content type should be preferred. A lookup for the other content type is then skipped. \n           <br>(The following examples use json-decoded data for demonstration purposes.)\n    \n    **Example:** _Preview Text is returned with a max. of 200 characters._\n    ```\n    ?options={previewText: {length:200}} \n    ```\n    **Example:** _Preview Text is returned with a max. of 200 characters, trimming should be done by the backend._\n    ```\n    ?options={previewText: {length:200, trimApi: true}} \n    ```\n    **Example:** _Preview Text configured to first look up content type `plain`, then content type `html` to generate the previewText:_\n    ```\n    ?options={previewText: {plain: {length: 200, trimApi: true, precedence: true}}, {html: {length: 200, trimApi: true}} \n    ``` \n    \n    If `plain` and `html` are omitted, the options configured for `previewText` should be internally get applied to both content types.\n    **Default**: The `previewText`s default setting should be, if nothing else specified:\n    ```json\n      previewText: {\n        plain: {\n            precedence: true,\n            length: 200,\n            trimApi: true\n        },\n        html: {\n            length: 200,\n            trimApi: true\n        }\n    }\n    ```\n    \n##### Ignored Options\nif an attribute is excluded, any value found in `options` referring to it will be ignored.",
+        "description": "Returns a list of all available `MessageItem`s for the `MailFolder` identified by `mailFolderId` belonging to the `MailAccount` identified by `mailAccountId` for the requesting client. \nThe list of `MessageItem`s returned is in the boundaries of `start` and `start + limit`; meta-information in the response need to contain the total number of `MessageItems` the owning `Mailfolder` contains. \n\n### Query Parameters\n\n\n### `limit`\nA client must explicitly set `limit` to -1 if **ALL** items should be returned. `limit` is only considered if no filter with the property `id` is found.\n\n### Sparse Fieldset with `fields[MessageItem]`\n\nAllows to define the attributes to return with a `MessageItem`. Defaults to `*` which means all attributes of a `MessageItem` are included.\nTo exclude attributes, append a comma-separated list with the names of attributes to exclude:\n\n**Example:** _All attributes are included (default)_\n```\n?fields[MessageItem]=* \n```\n\n**Example:** _Only `previewText` will be included in the set of attributes_\n```\n?fields[MessageItem]=previewText \n```\n\n**Example:** _`subject` and `previewText` will not be included in the set of attributes_\n```\n?fields[MessageItem]=*,previewText,subject \n```\n\n### `include`\n\nTo include the data of the owning `MailFolder`, use the query parameter `include` set to `MailFolders`. To only return the fields `unread` and `total`, add the query parameter `fields[MailFolder]` set to `unread,total`.\n\n**Example:**\n```\n?include=MailFolders&fields[MailFolder]=unread,total\n```\n  \n### `filter`\n\nA **json-encoded** string providing additional filter to consider. Must be an array of filter-objects. Multiple filter objects are considered as logical `OR` conditionals.\nIf the server does not understand the filter, a 400-response **MUST** be returned.\nTo group `filter` as logical `AND`, use Arrays of Arrays.\n\n\n#### Filter configuration\n- `property`\n    <br>The `property`-key **SHOULD** be an attribute the server understands.\n- `value`\n    <br>The `value`-key **SHOULD** be a a value for the `property`. The format is arbitrary.\n- `operator`\n    <br>The `operator`-key **SHOULD** be the operator that is used for comparing a list of data with the `property`s `value`. The default operator used is `=`\n         <br>(The following examples use json-decoded data for demonstration purposes.)\n         <br>\n    **Example:** _Getting messages flagged as `recent`._\n    ```\n    ?filter=[{\"property\": \"recent\", \"value\": true}]\n    ```\n    **Example:** _Getting messages flagged as `recent`, **OR** messages flagged as `unseen` with an `id` greater than 1657._\n    ```\n    ?filter=[{\"property\": \"recent\", \"value\": true}, [{\"property\": \"unseen\", \"value\": true}, {\"property\": \"id\", \"value\": 1657, \"operator\": \">\"}]]\n    ```\n    **Example:** _Getting only a specific set of messages based on their `id`s:\n    ```\n    ?filter=[{\"property\": \"id\", \"value\": [\"89678\", \"45\", \"98798\"], \"operator\": \"in\"}]\n    ```\n\n\n\n### `options`\n\nA **json-encoded** string providing additional options for the attributes.\n\n- `previewText`\n    <br>The `previewText`-attribute **MUST** be allowed to be configured with:\n           <br> - `length` this allows to specify the length of the `previewText` to return\n    <br>The `previewText`-attribute **MUST NOT**, but **SHOULD**,  be allowed to be configured with:\n           <br> - `trimApi` if `length` is specified, `trimApi` requests the implementing backend to read out the complete text before trimming it. This can prevent charset decoding issues, but increases load-times (defaults to `false`).\n           <br> apply options to `html`/`plain`: If the backend supports it, the client should be able to chose which content type of the message should be previewed. The option `precedence` should be submitted to tell which content type should be preferred. A lookup for the other content type is then skipped. \n           <br>(The following examples use json-decoded data for demonstration purposes.)\n    \n    **Example:** _Preview Text is returned with a max. of 200 characters._\n    ```\n    ?options={previewText: {length:200}} \n    ```\n    **Example:** _Preview Text is returned with a max. of 200 characters, trimming should be done by the backend._\n    ```\n    ?options={previewText: {length:200, trimApi: true}} \n    ```\n    **Example:** _Preview Text configured to first look up content type `plain`, then content type `html` to generate the previewText:_\n    ```\n    ?options={previewText: {plain: {length: 200, trimApi: true, precedence: true}}, {html: {length: 200, trimApi: true}} \n    ``` \n    \n    If `plain` and `html` are omitted, the options configured for `previewText` should be internally get applied to both content types.\n    **Default**: The `previewText`s default setting should be, if nothing else specified:\n    ```json\n      previewText: {\n        plain: {\n            precedence: true,\n            length: 200,\n            trimApi: true\n        },\n        html: {\n            length: 200,\n            trimApi: true\n        }\n    }\n    ```\n    \n##### Ignored Options\nif a field is excluded, any value found in `options` referring to it will be ignored.",
         "operationId": "getMessageItems",
         "parameters": [
           {
@@ -183,69 +249,87 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": {
-                      "type": "boolean"
-                    },
-                    "total": {
-                      "type": "integer"
-                    },
-                    "meta": {
-                      "type": "object",
-                      "properties": {
-                        "cn_unreadCount": {
-                          "type": "integer",
-                          "description": "The number of unread messages the mailbox contains"
-                        },
-                        "mailFolderId": {
-                          "type": "string"
-                        },
-                        "mailAccountId": {
-                          "type": "string"
-                        }
-                      }
-                    },
                     "data": {
                       "type": "array",
                       "items": {
-                        "$ref": "#/components/schemas/MessageItem"
+                        "$ref": "#/components/schemas/MessageItem_ResourceObject"
                       }
                     }
                   }
                 },
                 "examples": {
-                  "MessageItem response example": {
+                  "/MailAccounts/gmail/MailFolders/INBOX/MessageItems?include=MailFolders&fields[MailFolder]=unread,total": {
                     "value": {
-                      "success": true,
-                      "total": 3244224,
-                      "meta": {
-                        "cn_unreadCount": 23230,
-                        "mailFolderId": "INBOX",
-                        "mailAccountId": "conjoon"
-                      },
                       "data": [
                         {
-                          "date": "string",
-                          "subject": "Welcome!",
-                          "from": "string",
-                          "seen": false,
-                          "answered": false,
-                          "flagged": false,
-                          "draft": false,
-                          "recent": true,
-                          "hasAttachments": false,
-                          "to": [
-                            {
-                              "name": "Peter Griffin",
-                              "address": "Peter.Griffin@quahog.com"
+                          "id": "string",
+                          "type": "MessageItem",
+                          "attributes": {
+                            "from": {
+                              "address": "string",
+                              "name": "string"
+                            },
+                            "to": [
+                              {
+                                "address": "string",
+                                "name": "string"
+                              }
+                            ],
+                            "cc": [
+                              {
+                                "address": "string",
+                                "name": "string"
+                              }
+                            ],
+                            "bcc": [
+                              {
+                                "address": "string",
+                                "name": "string"
+                              }
+                            ],
+                            "replyTo": {
+                              "address": "string",
+                              "name": "string"
+                            },
+                            "date": "string",
+                            "subject": "string",
+                            "seen": true,
+                            "answered": true,
+                            "draft": true,
+                            "flagged": true,
+                            "recent": true,
+                            "references": "string",
+                            "messageId": "string",
+                            "size": 0,
+                            "hasAttachments": true,
+                            "previewText": "string"
+                          },
+                          "relationships:": {
+                            "MailFolder": {
+                              "data": {
+                                "id": "INBOX",
+                                "type": "MailFolder"
+                              }
                             }
-                          ],
-                          "previewText": "Welcome to conjoon! It's been a while since we have upt",
-                          "size": 234,
-                          "cn_deleted": false,
-                          "cn_moved": false,
-                          "id": "2343",
-                          "mailAccountId": "conjoon",
-                          "mailFolderId": "INBOX"
+                          }
+                        }
+                      ],
+                      "included": [
+                        {
+                          "id": "INBOX",
+                          "type": "MailFolder",
+                          "attributes": {
+                            "unread": 12,
+                            "total": 40
+                          },
+                          "relationships": {
+                            "MailAccounts": {
+                              "data": {
+                                "id": "gmail",
+                                "type": "MailAccount"
+                              }
+                            }
+                          }
                         }
                       ]
                     }
@@ -276,7 +360,7 @@
           "MessageDraft"
         ],
         "summary": "Create a new message as a draft",
-        "description": "Creates a new draft for the specified `MailAccount` and stores it in the `MailBox` identified with `mailFolderId`",
+        "description": "Creates a new draft for the specified `MailAccount` and stores it in the `MailFolder` identified with `mailFolderId`",
         "operationId": "postMessageBodyDraft",
         "parameters": [
           {
@@ -294,11 +378,8 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": {
-                      "type": "boolean"
-                    },
                     "data": {
-                      "$ref": "#/components/schemas/MessageBody"
+                      "$ref": "#/components/schemas/MessageBody_ResourceObject"
                     }
                   }
                 }
@@ -316,20 +397,6 @@
           },
           "500": {
             "description": "Internal Server Error - if the implementing API encountered an internal error."
-          },
-          "": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "$ref": "#/components/schemas/MessageBody"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "requestBody": {
@@ -338,35 +405,35 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "type": {
-                    "type": "string"
-                  },
-                  "mailAccountId": {
-                    "type": "string"
-                  },
-                  "mailFolderId": {
-                    "type": "string"
-                  },
-                  "attributes": {
+                  "data": {
                     "type": "object",
                     "properties": {
-                      "textPlain": {
-                        "type": "string"
+                      "type": {
+                        "type": "string",
+                        "default": "MessageBody",
+                        "readOnly": true
                       },
-                      "textHtml": {
-                        "type": "string"
+                      "attributes": {
+                        "type": "object",
+                        "properties": {
+                          "textPlain": {
+                            "type": "string"
+                          },
+                          "textHtml": {
+                            "type": "string"
+                          }
+                        }
                       }
-                    }
+                    },
+                    "required": [
+                      "type"
+                    ]
                   }
-                },
-                "required": [
-                  "type",
-                  "mailAccountId",
-                  "mailFolderId"
-                ]
+                }
               }
             }
-          }
+          },
+          "description": ""
         }
       },
       "parameters": [
@@ -394,7 +461,7 @@
           "MessageItem"
         ],
         "summary": "Return envelope information of a single message",
-        "description": "Returns the single `MessageItem` for the specified key fragments.\nThe API does not distinguish between  requesting a `MessageDraft` or a `MessageItem`, since envelope informations are all the same. It is up to the client to render the information given the specific context (i.e. read or edit).\n\n### Query Parameters\n\n### `attributes`\n\nAllows to define the attributes to return with a `MessageItem`. Defaults to `*` which means all attributes of a `MessageItem` are included.\nTo exclude attributes, append a comma-separated list with the names of attributes to exclude:\n\n**Example:** _All attributes are included (default)_\n```\n?attributes=* \n```\n\n**Example:** _Only `hasAttachments` will be included in the set of attributes_\n```\n?attributes=hasAttachments\n```\n\n**Example:** _`subject` and `previewText` will not be included in the set of attributes_\n```\n?attributes=*,previewText,subject \n```",
+        "description": "Returns the single `MessageItem`.\nThe API does not distinguish betweenrequesting a `MessageDraft` or a `MessageItem`, since envelope informations are all the same. It is up to the client to render the information given the specific context (i.e. read or edit).\n\n### Query Parameters\n\n### Sparse Fieldset with `fields[MessageItem]`\n\nAllows to define the attributes to return with a `MessageItem`. Defaults to `*` which means all attributes of a `MessageItem` are included.\nTo exclude attributes, append a comma-separated list with the names of attributes to exclude:\n\n**Example:** _All attributes are included (default)_\n```\n?fields[MessageItem]=* \n```\n\n**Example:** _Only `hasAttachments` will be included in the set of attributes_\n```\n?fields[MessageItem]=hasAttachments\n```\n\n**Example:** _`subject` and `previewText` will not be included in the set of attributes_\n```\n?fields[MessageItem]=*,previewText,subject \n```",
         "operationId": "getMessageItem",
         "parameters": [
           {
@@ -417,17 +484,80 @@
         ],
         "responses": {
           "200": {
-            "description": "The `MessageItem` found for the specified `mailAccountId`, `mailFolderId` and `messageItemId`",
+            "description": "The `MessageItem` found at the resource location.  ",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": {
-                      "type": "boolean"
-                    },
                     "data": {
-                      "$ref": "#/components/schemas/MessageItem"
+                      "$ref": "#/components/schemas/MessageItem_ResourceObject"
+                    }
+                  }
+                },
+                "examples": {
+                  "MessageItem Response": {
+                    "value": {
+                      "data": {
+                        "id": "string",
+                        "type": "MessageItem",
+                        "relationships": {
+                          "MailFolder": {
+                            "data": {
+                              "id": "string",
+                              "type": "MailFolder",
+                              "relationships": {
+                                "MailAccount": {
+                                  "data": {
+                                    "id": "string",
+                                    "type": "MailAccount"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "attributes": {
+                          "from": {
+                            "address": "string",
+                            "name": "string"
+                          },
+                          "to": [
+                            {
+                              "address": "string",
+                              "name": "string"
+                            }
+                          ],
+                          "cc": [
+                            {
+                              "address": "string",
+                              "name": "string"
+                            }
+                          ],
+                          "bcc": [
+                            {
+                              "address": "string",
+                              "name": "string"
+                            }
+                          ],
+                          "replyTo": {
+                            "address": "string",
+                            "name": "string"
+                          },
+                          "date": "string",
+                          "subject": "string",
+                          "seen": true,
+                          "answered": true,
+                          "draft": true,
+                          "flagged": true,
+                          "recent": true,
+                          "references": "string",
+                          "messageId": "string",
+                          "size": 0,
+                          "hasAttachments": true,
+                          "previewText": "string"
+                        }
+                      }
                     }
                   }
                 }
@@ -504,19 +634,7 @@
         "operationId": "sendMessageDraft",
         "responses": {
           "200": {
-            "description": "OK - If the message was sent, the API responds with a Status Code of `200`. ",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean"
-                    }
-                  }
-                }
-              }
-            }
+            "description": "OK - if the message was sent, a `200` status code is returned with the response."
           },
           "401": {
             "description": "Unauthorized - the client is not authenticated."
@@ -546,7 +664,7 @@
           "MessageItem"
         ],
         "summary": "Move/Flag a message",
-        "description": "Updates the specific `MessageItem` with the submitted information.\nThe client can move a message to a different MailFolder by explicitely setting the `mailFolderId`-value in the `attribute` bag.\n\nIt is possible that the server decides to store the message under a new `id` if a message was moved to a new location. The returned keys must reflect the changes, and the client must inspect the keys to make sure data is properly updated.\n\n**Note:**\nIf fields of a message are updated and its id changes, the backend **MUST** consider the new resource location for all related entities of **THIS** message, such as its body and its attachments. The client has to take care of applying the newly created key fragments to existing entities currently used in memory, either dynamically or by triggering a complete reload of the updated message.",
+        "description": "Updates the specific `MessageItem` with the submitted information.\nThe client can move a message to a different MailFolder by explicitely submitting a `relationships` member.\n\nIt is possible that the server decides to store the message under a new `id`. The updated relationships are available with the response.\n\n**Note:**\nIf fields of a message are updated and its id changes, the backend **MUST** consider the new resource location for all related entities of **THIS** message, such as its body and its attachments. The client has to take care of applying the updated relationships to existing entities currently used in memory, either dynamically or by triggering a complete reload of the updated message.",
         "operationId": "putMessageItem",
         "parameters": [
           {
@@ -565,17 +683,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "oneOf": [
-                    {
-                      "$ref": "#/components/schemas/putMessageItemResponse"
-                    },
-                    {
-                      "$ref": "#/components/schemas/moveMessageItemResponse"
-                    },
-                    {
-                      "$ref": "#/components/schemas/moveMessageItemResponse"
-                    }
-                  ]
+                  "$ref": "#/components/schemas/moveMessageItemResponse"
                 }
               }
             }
@@ -603,19 +711,11 @@
                     "type": "object",
                     "required": [
                       "type",
-                      "mailAccountId",
-                      "mailFolderId",
                       "id",
                       "attributes"
                     ],
                     "properties": {
                       "type": {
-                        "type": "string"
-                      },
-                      "mailAccountId": {
-                        "type": "string"
-                      },
-                      "mailFolderId": {
                         "type": "string"
                       },
                       "id": {
@@ -632,11 +732,19 @@
                           },
                           "seen": {
                             "type": "boolean"
-                          },
-                          "mailFolderId": {
-                            "type": "string"
                           }
                         }
+                      },
+                      "relationships": {
+                        "type": "object",
+                        "properties": {
+                          "MailFolders": {
+                            "$ref": "#/components/schemas/MailFolder_ResourceLinkage"
+                          }
+                        },
+                        "required": [
+                          "MailFolders"
+                        ]
                       }
                     }
                   }
@@ -645,35 +753,7 @@
                   "data"
                 ]
               },
-              "examples": {
-                "moving a MessageItem": {
-                  "value": {
-                    "data": {
-                      "type": "MessageItem",
-                      "mailAccountId": "dev",
-                      "mailFolderId": "INBOX.Drafts",
-                      "id": "234424",
-                      "attributes": {
-                        "mailFolderId": "INBOX.Trash"
-                      }
-                    }
-                  }
-                },
-                "updating the flags of a MessageItem": {
-                  "value": {
-                    "data": {
-                      "type": "MessageItem",
-                      "mailAccountId": "dev",
-                      "mailFolderId": "INBOX.Drafts",
-                      "id": "234424",
-                      "attributes": {
-                        "seen": true,
-                        "flagged": true
-                      }
-                    }
-                  }
-                }
-              }
+              "examples": {}
             }
           },
           "description": ""
@@ -712,8 +792,8 @@
           "MessageItem"
         ],
         "summary": "Updates a message as a draft",
-        "description": "Updates the specific `MessageDraft` with the submitted information.\nIt is possible that the server decides to store the message under a new `id`. The returned keys must reflect the changes, and the client must inspect the keys to make sure data is properly updated.\n\n**Note:**\nIf fields of a message are updated and its id changes, the backend **MUST** consider the new resource location for all related entities of **THIS** message, such as its body and its attachments. The client has to take care of applying the newly created key fragments to existing entities currently used in memory, either dynamically or by triggering a complete reload of the updated message.",
-        "operationId": "putMessageItem",
+        "description": "Updates the specific `MessageDraft` with the submitted information.\nIt is possible that the server decides to store the message under a new `id`. The updated relationships are available with the response.\n\n**Note:**\nIf fields of a message are updated and its id changes, the backend **MUST** consider the new resource location for all related entities of **THIS** message, such as its body and its attachments. The client has to take care of applying the updated relationships to existing entities currently used in memory, either dynamically or by triggering a complete reload of the updated message.",
+        "operationId": "putMessageDraft",
         "parameters": [
           {
             "$ref": "#/components/parameters/mailAccountId"
@@ -731,17 +811,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "oneOf": [
-                    {
-                      "$ref": "#/components/schemas/putMessageItemResponse"
-                    },
-                    {
-                      "$ref": "#/components/schemas/moveMessageItemResponse"
-                    },
-                    {
-                      "$ref": "#/components/schemas/moveMessageItemResponse"
-                    }
-                  ]
+                  "$ref": "#/components/schemas/moveMessageItemResponse"
                 }
               }
             }
@@ -766,78 +836,69 @@
                 "type": "object",
                 "properties": {
                   "data": {
-                    "type": "object",
-                    "required": [
-                      "type",
-                      "mailAccountId",
-                      "mailFolderId",
-                      "id",
-                      "attributes"
-                    ],
-                    "properties": {
-                      "type": {
-                        "type": "string"
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/MessageItem_ResourceIdentifier"
                       },
-                      "mailAccountId": {
-                        "type": "string"
-                      },
-                      "mailFolderId": {
-                        "type": "string"
-                      },
-                      "id": {
-                        "type": "string"
-                      },
-                      "attributes": {
+                      {
                         "type": "object",
                         "properties": {
-                          "to": {
-                            "type": "string",
-                            "description": "JSON-encoded representation of an EmailAddress"
-                          },
-                          "cc": {
-                            "type": "string",
-                            "description": "JSON-encoded representation of a list of EmailAddresses"
-                          },
-                          "bcc": {
-                            "type": "string",
-                            "description": "JSON-encoded representation of a list of EmailAddresses"
-                          },
-                          "date": {
-                            "type": "string",
-                            "description": "client's UNIX Timestamp representing date of creation "
-                          },
-                          "draft": {
-                            "type": "boolean"
-                          },
-                          "flagged": {
-                            "type": "boolean"
-                          },
-                          "from": {
-                            "type": "string",
-                            "description": "JSON-encoded representation of an EmailAddress"
-                          },
-                          "inReplyTo": {
-                            "type": "string"
-                          },
-                          "references": {
-                            "type": "string"
-                          },
-                          "replyTo": {
-                            "type": "string",
-                            "description": "JSON-encoded representation of an EmailAddress"
-                          },
-                          "seen": {
-                            "type": "boolean"
-                          },
-                          "subject": {
-                            "type": "string"
-                          },
-                          "xCnDraftInfo": {
-                            "type": "string"
+                          "attributes": {
+                            "type": "object",
+                            "properties": {
+                              "to": {
+                                "type": "string",
+                                "description": "JSON-encoded representation of an EmailAddress"
+                              },
+                              "cc": {
+                                "type": "string",
+                                "description": "JSON-encoded representation of a list of EmailAddresses"
+                              },
+                              "bcc": {
+                                "type": "string",
+                                "description": "JSON-encoded representation of a list of EmailAddresses"
+                              },
+                              "date": {
+                                "type": "string",
+                                "description": "client's UNIX Timestamp representing date of creation "
+                              },
+                              "draft": {
+                                "type": "boolean"
+                              },
+                              "flagged": {
+                                "type": "boolean"
+                              },
+                              "from": {
+                                "type": "string",
+                                "description": "JSON-encoded representation of an EmailAddress"
+                              },
+                              "inReplyTo": {
+                                "type": "string"
+                              },
+                              "references": {
+                                "type": "string"
+                              },
+                              "replyTo": {
+                                "type": "string",
+                                "description": "JSON-encoded representation of an EmailAddress"
+                              },
+                              "seen": {
+                                "type": "boolean"
+                              },
+                              "subject": {
+                                "type": "string"
+                              },
+                              "xCnDraftInfo": {
+                                "type": "string"
+                              }
+                            }
                           }
-                        }
+                        },
+                        "required": [
+                          "attributes"
+                        ]
                       }
-                    }
+                    ]
                   }
                 },
                 "required": [
@@ -896,7 +957,7 @@
         "tags": [
           "MessageBody"
         ],
-        "summary": "Return the body of a message",
+        "summary": "Returns a MessageBody.",
         "description": "Returns the single `MessageBody` for the specified key fragments.",
         "operationId": "getMessageBody",
         "parameters": [
@@ -918,11 +979,8 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": {
-                      "type": "boolean"
-                    },
                     "data": {
-                      "$ref": "#/components/schemas/MessageBody"
+                      "$ref": "#/components/schemas/MessageBody_ResourceObject"
                     }
                   }
                 }
@@ -970,7 +1028,7 @@
         }
       ],
       "patch": {
-        "summary": "Update the body of a message",
+        "summary": "Update a MessageBody.",
         "operationId": "updateMessageBody",
         "responses": {
           "200": {
@@ -1109,13 +1167,16 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": {
-                      "type": "boolean"
-                    },
                     "data": {
                       "type": "array",
                       "items": {
-                        "$ref": "#/components/schemas/FileAttachmentItem"
+                        "$ref": "#/components/schemas/Attachment_ResourceObject"
+                      }
+                    },
+                    "included": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/MessageItem_ResourceObject_incl"
                       }
                     }
                   }
@@ -1172,7 +1233,7 @@
                       "type": "boolean"
                     },
                     "data": {
-                      "$ref": "#/components/schemas/FileAttachmentItem"
+                      "$ref": "#/components/schemas/Attachment_ResourceObject"
                     }
                   }
                 }
@@ -1333,7 +1394,7 @@
                       "readOnly": true
                     },
                     "data": {
-                      "$ref": "#/components/schemas/MessageKey"
+                      "$ref": "#/components/schemas/MessageItem_ResourceIdentifier"
                     }
                   }
                 }
@@ -1432,250 +1493,446 @@
       }
     },
     "schemas": {
-      "MailFolder": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
+      "MailAccount_ResourceObject": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/MailAccount_ResourceIdentifier"
           },
-          "mailAccountId": {
-            "type": "string"
+          {
+            "type": "object",
+            "properties": {
+              "attributes": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "folderType": {
+                    "type": "string"
+                  },
+                  "from": {
+                    "type": "string"
+                  },
+                  "replyTo": {
+                    "type": "string"
+                  },
+                  "inbox_address": {
+                    "type": "string"
+                  },
+                  "inbox_port": {
+                    "type": "string"
+                  },
+                  "inbox_user": {
+                    "type": "string"
+                  },
+                  "inbox_password": {
+                    "type": "string"
+                  },
+                  "inbox_ssl": {
+                    "type": "boolean"
+                  },
+                  "outbox_address": {
+                    "type": "string"
+                  },
+                  "outbox_port": {
+                    "type": "string"
+                  },
+                  "outbox_user": {
+                    "type": "string"
+                  },
+                  "outbox_password": {
+                    "type": "string"
+                  },
+                  "outbox_secure": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "x-examples": {},
+        "title": "MailAccount (Resource Object)",
+        "description": "Resource Object representing a `MailAccount`."
+      },
+      "MailFolder_ResourceObject": {
+        "description": "Resource Object representing a `MailFolder`. Contains a Resource Linkage to the owning `MailAccount` in its `relationships` member.",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/MailFolder_ResourceIdentifier"
           },
-          "name": {
-            "type": "string"
-          },
-          "unreadCount": {
-            "type": "integer"
-          },
-          "folderType": {
-            "type": "string"
-          },
-          "data": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/MailFolder"
+          {
+            "type": "object",
+            "properties": {
+              "attributes": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "folderType": {
+                    "type": "string"
+                  },
+                  "unread": {
+                    "type": "integer"
+                  },
+                  "total": {
+                    "type": "integer"
+                  },
+                  "data": {
+                    "description": "List of child mail folders, if any. May be empty.",
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/MailFolder_ResourceObject"
+                    }
+                  }
+                }
+              }
             }
           },
-          "uidNext": {
+          {
+            "type": "object",
+            "properties": {
+              "relationships": {
+                "$ref": "#/components/schemas/MailAccount_ResourceLinkage"
+              }
+            }
+          }
+        ],
+        "x-examples": {},
+        "title": "`MailFolder` (Resource Object)"
+      },
+      "MailFolder_ResourceObject_incl": {
+        "description": "Resource Object representing a `MailFolder` for compound documents w/o `attributes`.",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/MailFolder_ResourceIdentifier"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "relationships": {
+                "$ref": "#/components/schemas/MailAccount_ResourceLinkage"
+              }
+            }
+          }
+        ],
+        "x-examples": {},
+        "title": "MailFolder (Resource Object w/o attributes)"
+      },
+      "MessageItem_ResourceObject": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/MessageItem_ResourceIdentifier"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "attributes": {
+                "type": "object",
+                "properties": {
+                  "from": {
+                    "$ref": "#/components/schemas/EmailAddress"
+                  },
+                  "to": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/EmailAddress"
+                    }
+                  },
+                  "cc": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/EmailAddress"
+                    }
+                  },
+                  "bcc": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/EmailAddress"
+                    }
+                  },
+                  "replyTo": {
+                    "$ref": "#/components/schemas/EmailAddress"
+                  },
+                  "date": {
+                    "type": "string"
+                  },
+                  "subject": {
+                    "type": "string"
+                  },
+                  "seen": {
+                    "type": "boolean"
+                  },
+                  "answered": {
+                    "type": "boolean"
+                  },
+                  "draft": {
+                    "type": "boolean"
+                  },
+                  "flagged": {
+                    "type": "boolean"
+                  },
+                  "recent": {
+                    "type": "boolean"
+                  },
+                  "references": {
+                    "type": "string"
+                  },
+                  "messageId": {
+                    "type": "string"
+                  },
+                  "size": {
+                    "type": "integer"
+                  },
+                  "hasAttachments": {
+                    "type": "boolean"
+                  },
+                  "previewText": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "description": "Models envelope information of message items.\nProvides a Resource Linkage to the owning `MailFolder`.",
+        "title": "MessageItem_ResourceObject",
+        "x-examples": {}
+      },
+      "MessageItem_ResourceObject_incl": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/MessageItem_ResourceIdentifier"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "relationships:": {
+                "type": "object",
+                "properties": {
+                  "MailFolder": {
+                    "$ref": "#/components/schemas/MailFolder_ResourceLinkage"
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "description": "Resource Object representing a `MessageItem` for compound documents w/o `attributes`.",
+        "title": "MessageItem (ResourceObject w/o attributes)",
+        "x-examples": {}
+      },
+      "MessageBody_ResourceObject": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/MessageBody_ResourceIdentifier"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "attributes": {
+                "type": "object",
+                "properties": {
+                  "textHtml": {
+                    "type": "string"
+                  },
+                  "textPlain": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "x-examples": {},
+        "description": "Resource Object representing a `MessageBody`.",
+        "title": "Message Body (Resource Object)"
+      },
+      "Attachment_ResourceObject": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Attachment_ResourceIdentifier"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "attributes": {
+                "type": "object",
+                "properties": {
+                  "downloadUrl": {
+                    "type": "string",
+                    "description": "The download uri for the attachment the client understands, e.g. a data uri."
+                  },
+                  "previewImgSrc": {
+                    "type": "string",
+                    "description": "A computed src for a preview of the attachment the client understands, e.g. a data uri."
+                  },
+                  "size": {
+                    "type": "string",
+                    "description": "The size of the attachment in bytes."
+                  },
+                  "text": {
+                    "type": "string",
+                    "description": "The name of the attachment, e.g. the file name."
+                  },
+                  "type": {
+                    "type": "string",
+                    "description": "The mime type of the attachment."
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "properties": {
+              "relationships": {
+                "type": "object",
+                "properties": {
+                  "MessageItem": {
+                    "$ref": "#/components/schemas/MessageItem_ResourceLinkage"
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "description": "Attachment data to be returned by the API to the requesting client.",
+        "title": "FileAttachmentItem"
+      },
+      "MailAccount_ResourceIdentifier": {
+        "type": "object",
+        "description": "Resource Identifier for a `MailAccount`. ",
+        "title": "MailAccount_ResourceIdentifier",
+        "x-examples": {},
+        "properties": {
+          "id": {
             "type": "string",
-            "description": "Optional. The UID to be assigned to the next message in the currently selected folder, if supported by the server."
+            "readOnly": true
+          },
+          "type": {
+            "type": "string",
+            "default": "MailAccount",
+            "readOnly": true
           }
         }
       },
-      "MailAccount": {
+      "MailFolder_ResourceIdentifier": {
+        "type": "object",
+        "description": "Resource Identifier for a `MailFolder`. ",
+        "title": "MailFolder (Resource Identifier)",
+        "x-examples": {},
+        "properties": {
+          "id": {
+            "type": "string",
+            "readOnly": true
+          },
+          "type": {
+            "type": "string",
+            "default": "MailFolder",
+            "readOnly": true
+          }
+        }
+      },
+      "MessageItem_ResourceIdentifier": {
+        "type": "object",
+        "description": "Resource Identifier for a `MessageItem`. ",
+        "title": "MessageItem_ResourceIdentifier",
+        "x-examples": {},
+        "properties": {
+          "id": {
+            "type": "string",
+            "readOnly": true
+          },
+          "type": {
+            "type": "string",
+            "default": "MessageItem",
+            "readOnly": true
+          }
+        }
+      },
+      "MessageBody_ResourceIdentifier": {
+        "title": "MessageBody_ResourceIdentifier",
+        "x-stoplight": {
+          "id": "i0279o78op8lw"
+        },
+        "type": "object",
+        "description": "Resource Identifier for a `MessageBody`.",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "default": "MessageBody"
+          }
+        }
+      },
+      "Attachment_ResourceIdentifier": {
+        "description": "Resource Identifier for an `Attachment`. ",
+        "title": "Attachment (Resource Identifier)",
         "type": "object",
         "properties": {
           "id": {
             "type": "string"
           },
-          "name": {
-            "type": "string"
-          },
-          "folderType": {
-            "type": "string"
-          },
-          "from": {
-            "type": "string"
-          },
-          "replyTo": {
-            "type": "string"
-          },
-          "inbox_type": {
-            "type": "string"
-          },
-          "inbox_address": {
-            "type": "string"
-          },
-          "inbox_port": {
-            "type": "string"
-          },
-          "inbox_user": {
-            "type": "string"
-          },
-          "inbox_password": {
-            "type": "string"
-          },
-          "inbox_ssl": {
-            "type": "boolean"
-          },
-          "outbox_address": {
-            "type": "string"
-          },
-          "outbox_port": {
-            "type": "string"
-          },
-          "outbox_user": {
-            "type": "string"
-          },
-          "outbox_password": {
-            "type": "string"
-          },
-          "outbox_secure": {
-            "type": "string"
+          "type": {
+            "type": "string",
+            "default": "Attachment"
           }
         }
       },
-      "MessageBody": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/MessageKey"
+      "MailAccount_ResourceLinkage": {
+        "title": "MailAccount_ResourceLinkage",
+        "x-stoplight": {
+          "id": "3lar9glo8fii5"
+        },
+        "type": "object",
+        "description": "Resource Linkage for a `MailAccount`.",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/MailAccount_ResourceIdentifier"
           },
-          {
+          "links:": {
             "type": "object",
             "properties": {
-              "textHtml": {
-                "type": "string"
-              },
-              "textPlain": {
+              "related": {
                 "type": "string"
               }
             }
           }
-        ],
-        "properties": {
-          "textHtml": {
-            "type": "string"
-          },
-          "textPlain": {
-            "type": "string"
-          }
         },
-        "x-examples": {
-          "example-1": {
-            "textHtml": "string",
-            "textPlain": "string",
-            "id": "string",
-            "mailAccountId": "string",
-            "mailFolderId": "string"
-          }
-        },
-        "description": "The body of a message, containing content of the type text/html and/or text/plain."
+        "x-examples": {}
       },
-      "MessageItem": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/MessageKey"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "from": {
-                "$ref": "#/components/schemas/EmailAddress"
-              },
-              "to": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/EmailAddress"
-                }
-              },
-              "cc": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/EmailAddress"
-                }
-              },
-              "bcc": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/EmailAddress"
-                }
-              },
-              "replyTo": {
-                "$ref": "#/components/schemas/EmailAddress"
-              },
-              "date": {
-                "type": "string"
-              },
-              "subject": {
-                "type": "string"
-              },
-              "seen": {
-                "type": "boolean"
-              },
-              "answered": {
-                "type": "boolean"
-              },
-              "draft": {
-                "type": "boolean"
-              },
-              "flagged": {
-                "type": "boolean"
-              },
-              "recent": {
-                "type": "boolean"
-              },
-              "references": {
-                "type": "string"
-              },
-              "messageId": {
-                "type": "string"
-              },
-              "size": {
-                "type": "integer"
-              },
-              "hasAttachments": {
-                "type": "boolean"
-              },
-              "previewText": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "draft"
-            ]
+      "MailFolder_ResourceLinkage": {
+        "title": "MailFolder_ResourceLinkage",
+        "x-stoplight": {
+          "id": "6ohwpshud47fp"
+        },
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/MailFolder_ResourceIdentifier"
           }
-        ],
-        "description": "Models envelope information of message items.\n`MessageItem`s must always provide the `mailAccountId`, `mailFolderId`, and `id` to uniquely identify them. \nImplementing APIs are advised to consider a query-parameter that provides information about the set of fields the client expects with a response.",
-        "title": "MessageItem",
-        "x-examples": {
-          "MessageItem": {
-            "id": "string",
-            "mailAccountId": "string",
-            "mailFolderId": "string",
-            "from": {
-              "address": "string",
-              "name": "string"
-            },
-            "to": [
-              {
-                "address": "string",
-                "name": "string"
-              }
-            ],
-            "cc": [
-              {
-                "address": "string",
-                "name": "string"
-              }
-            ],
-            "bcc": [
-              {
-                "address": "string",
-                "name": "string"
-              }
-            ],
-            "replyTo": {
-              "address": "string",
-              "name": "string"
-            },
-            "date": "string",
-            "subject": "string",
-            "seen": true,
-            "answered": true,
-            "draft": true,
-            "flagged": true,
-            "recent": true,
-            "references": "string",
-            "messageId": "string",
-            "size": 0,
-            "hasAttachments": true
+        },
+        "description": "Resource LInkage for a `MailFolder`."
+      },
+      "MessageItem_ResourceLinkage": {
+        "type": "object",
+        "description": "Resource Linkage for a `MessageItem`. ",
+        "title": "MessageItem_ResourceLinkage",
+        "x-examples": {},
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/MessageItem_ResourceIdentifier"
           }
         }
       },
       "putMessageItemResponse": {
         "allOf": [
           {
-            "$ref": "#/components/schemas/MessageKey"
+            "$ref": "#/components/schemas/MessageItem_ResourceIdentifier"
           }
         ],
         "type": "object",
@@ -1689,39 +1946,29 @@
         }
       },
       "moveMessageItemResponse": {
-        "type": "object",
-        "properties": {
-          "success": {
-            "type": "boolean"
+        "x-examples": {},
+        "allOf": [
+          {
+            "properties": {
+              "data": {
+                "$ref": "#/components/schemas/MessageItem_ResourceObject"
+              }
+            }
           },
-          "data": {
-            "$ref": "#/components/schemas/MessageItem"
+          {
+            "properties": {
+              "relationships": {
+                "type": "object",
+                "properties": {
+                  "MailFolders": {
+                    "$ref": "#/components/schemas/MailFolder_ResourceLinkage"
+                  }
+                }
+              }
+            }
           }
-        },
-        "x-examples": {}
-      },
-      "MessageKey": {
-        "type": "object",
-        "description": "A composite key that consists of the attributes `mailAccountId`, `mailFolderId` and `id`. Uniquely identifies a message-entity occurrence. ",
-        "title": "MessageKey",
-        "x-examples": {
-          "MessageKey example": {
-            "id": "123",
-            "mailAccountId": "conjoon",
-            "mailFolderId": "INBOX"
-          }
-        },
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "mailAccountId": {
-            "type": "string"
-          },
-          "mailFolderId": {
-            "type": "string"
-          }
-        }
+        ],
+        "type": "object"
       },
       "EmailAddress": {
         "title": "EmailAddress",
@@ -1741,56 +1988,6 @@
             "name": "conjoon maintainer"
           }
         }
-      },
-      "FileAttachmentItem": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/AttachmentKey"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "downloadUrl": {
-                "type": "string",
-                "description": "The download uri for the attachment the client understands, e.g. a data uri."
-              },
-              "previewImgSrc": {
-                "type": "string",
-                "description": "A computed src for a preview of the attachment the client understands, e.g. a data uri."
-              },
-              "size": {
-                "type": "string",
-                "description": "The size of the attachment in bytes."
-              },
-              "text": {
-                "type": "string",
-                "description": "The name of the attachment, e.g. the file name."
-              },
-              "type": {
-                "type": "string",
-                "description": "The mime type of the attachment."
-              }
-            }
-          }
-        ],
-        "description": "Attachment data to be returned by the API to the requesting client.",
-        "title": "FileAttachmentItem"
-      },
-      "AttachmentKey": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/MessageKey"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "parentMessageItemId": {
-                "type": "string"
-              }
-            }
-          }
-        ],
-        "description": "A composite key that consists of the attributes `mailAccountId`, `mailFolderId`, `id` and `parentMessageItemId`. Uniquely identifies an attachment belonging to a MessageItem. "
       }
     },
     "securitySchemes": {
@@ -1807,7 +2004,7 @@
             "schema": {
               "allOf": [
                 {
-                  "$ref": "#/components/schemas/MessageKey"
+                  "$ref": "#/components/schemas/MessageItem_ResourceIdentifier"
                 },
                 {
                   "type": "object",
@@ -1835,7 +2032,7 @@
                   "type": "boolean"
                 },
                 "data": {
-                  "$ref": "#/components/schemas/MessageItem"
+                  "$ref": "#/components/schemas/MessageItem_ResourceObject"
                 }
               }
             }
