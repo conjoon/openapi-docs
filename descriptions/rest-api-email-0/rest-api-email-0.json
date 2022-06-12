@@ -80,7 +80,7 @@
         ],
         "responses": {
           "200": {
-            "description": "A list of all available `MailFolders` for the client and the specified `MailAccount`.",
+            "description": "A list of all `MailFolders` for the authenticated client available within the specified `MailAccount`.",
             "content": {
               "application/json": {
                 "schema": {
@@ -94,43 +94,12 @@
                     }
                   }
                 },
-                "examples": {
-                  "example-1": {
-                    "value": {
-                      "data": [
-                        {
-                          "id": "string",
-                          "type": "MailFolder",
-                          "attributes": {
-                            "name": "string",
-                            "unreadCount": 0,
-                            "folderType": "string",
-                            "data": [
-                              null
-                            ]
-                          },
-                          "relationships": {
-                            "data": {
-                              "id": "string",
-                              "type": "MailAccount"
-                            },
-                            "links:": {
-                              "related": "string"
-                            }
-                          }
-                        }
-                      ]
-                    }
-                  }
-                }
+                "examples": {}
               }
             }
           },
           "401": {
-            "description": "Returned if the requesting client is not logged in."
-          },
-          "403": {
-            "description": "Returned if the requesting client is not allowed to access the resource."
+            "description": "Returned if the requesting client is not authenticated."
           },
           "404": {
             "description": "Returned if the specified `MailAccount` was not found."
@@ -1543,10 +1512,10 @@
                   "folderType": {
                     "type": "string"
                   },
-                  "unread": {
+                  "unreadMessages": {
                     "type": "integer"
                   },
-                  "total": {
+                  "totalMessages": {
                     "type": "integer"
                   },
                   "data": {
@@ -1564,13 +1533,18 @@
             "type": "object",
             "properties": {
               "relationships": {
-                "$ref": "#/components/schemas/MailAccount_ResourceLinkage"
+                "type": "object",
+                "properties": {
+                  "MailAccounts": {
+                    "$ref": "#/components/schemas/MailAccount_ResourceLinkage"
+                  }
+                }
               }
             }
           }
         ],
         "x-examples": {},
-        "title": "`MailFolder` (Resource Object)"
+        "title": "MailFolder (Resource Object)"
       },
       "MailFolder_ResourceObject_incl": {
         "description": "Resource Object representing a `MailFolder` for compound documents w/o `attributes`.",
@@ -1860,20 +1834,12 @@
         },
         "type": "object",
         "description": "Resource Linkage for a `MailAccount`.",
+        "x-examples": {},
         "properties": {
           "data": {
             "$ref": "#/components/schemas/MailAccount_ResourceIdentifier"
-          },
-          "links:": {
-            "type": "object",
-            "properties": {
-              "related": {
-                "type": "string"
-              }
-            }
           }
-        },
-        "x-examples": {}
+        }
       },
       "MailFolder_ResourceLinkage": {
         "title": "MailFolder_ResourceLinkage",
