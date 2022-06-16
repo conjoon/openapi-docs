@@ -60,7 +60,7 @@
             }
           },
           "401": {
-            "$ref": "#/components/responses/ErrorResponse"
+            "$ref": "#/components/responses/401-Unauthorized"
           }
         }
       }
@@ -99,10 +99,10 @@
             }
           },
           "401": {
-            "$ref": "#/components/responses/ErrorResponse"
+            "$ref": "#/components/responses/401-Unauthorized"
           },
           "404": {
-            "$ref": "#/components/responses/ErrorResponse"
+            "$ref": "#/components/responses/404-NotFound"
           }
         }
       }
@@ -113,7 +113,7 @@
           "MessageItem"
         ],
         "summary": "Get a collection of envelope information of messages",
-        "description": "Returns a list of all available `MessageItem`s for the `MailFolder` identified by `mailFolderId` belonging to the `MailAccount` identified by `mailAccountId` for the requesting client. \nThe list of `MessageItem`s returned is in the boundaries of `start` and `start + limit`; meta-information in the response need to contain the total number of `MessageItems` the owning `Mailfolder` contains. \n\n### Query Parameters\n\n\n### `limit`\nA client must explicitly set `limit` to -1 if **ALL** items should be returned. `limit` is only considered if no filter with the property `id` is found.\n\n### Sparse Fieldset with `fields[MessageItem]`\n\nAllows to define the attributes to return with a `MessageItem`. Defaults to `*` which means all attributes of a `MessageItem` are included.\nTo exclude attributes, append a comma-separated list with the names of attributes to exclude:\n\n**Example:** _All attributes are included (default)_\n```\n?fields[MessageItem]=* \n```\n\n**Example:** _Only `previewText` will be included in the set of attributes_\n```\n?fields[MessageItem]=previewText \n```\n\n**Example:** _`subject` and `previewText` will not be included in the set of attributes_\n```\n?fields[MessageItem]=*,previewText,subject \n```\n\n### `include`\n\nTo include the data of the owning `MailFolder`, use the query parameter `include` set to `MailFolders`. To only return the fields `unread` and `total`, add the query parameter `fields[MailFolder]` set to `unread,total`.\n\n**Example:**\n```\n?include=MailFolders&fields[MailFolder]=unread,total\n```\n  \n### `filter`\n\nA **json-encoded** string providing additional filter to consider. Must be an array of filter-objects. Multiple filter objects are considered as logical `OR` conditionals.\nIf the server does not understand the filter, a 400-response **MUST** be returned.\nTo group `filter` as logical `AND`, use Arrays of Arrays.\n\n\n#### Filter configuration\n- `property`\n    <br>The `property`-key **SHOULD** be an attribute the server understands.\n- `value`\n    <br>The `value`-key **SHOULD** be a a value for the `property`. The format is arbitrary.\n- `operator`\n    <br>The `operator`-key **SHOULD** be the operator that is used for comparing a list of data with the `property`s `value`. The default operator used is `=`\n         <br>(The following examples use json-decoded data for demonstration purposes.)\n         <br>\n    **Example:** _Getting messages flagged as `recent`._\n    ```\n    ?filter=[{\"property\": \"recent\", \"value\": true}]\n    ```\n    **Example:** _Getting messages flagged as `recent`, **OR** messages flagged as `unseen` with an `id` greater than 1657._\n    ```\n    ?filter=[{\"property\": \"recent\", \"value\": true}, [{\"property\": \"unseen\", \"value\": true}, {\"property\": \"id\", \"value\": 1657, \"operator\": \">\"}]]\n    ```\n    **Example:** _Getting only a specific set of messages based on their `id`s:\n    ```\n    ?filter=[{\"property\": \"id\", \"value\": [\"89678\", \"45\", \"98798\"], \"operator\": \"in\"}]\n    ```\n\n\n\n### `options`\n\nA **json-encoded** string providing additional options for the attributes.\n\n- `previewText`\n    <br>The `previewText`-attribute **MUST** be allowed to be configured with:\n           <br> - `length` this allows to specify the length of the `previewText` to return\n    <br>The `previewText`-attribute **MUST NOT**, but **SHOULD**,  be allowed to be configured with:\n           <br> - `trimApi` if `length` is specified, `trimApi` requests the implementing backend to read out the complete text before trimming it. This can prevent charset decoding issues, but increases load-times (defaults to `false`).\n           <br> apply options to `html`/`plain`: If the backend supports it, the client should be able to chose which content type of the message should be previewed. The option `precedence` should be submitted to tell which content type should be preferred. A lookup for the other content type is then skipped. \n           <br>(The following examples use json-decoded data for demonstration purposes.)\n    \n    **Example:** _Preview Text is returned with a max. of 200 characters._\n    ```\n    ?options={previewText: {length:200}} \n    ```\n    **Example:** _Preview Text is returned with a max. of 200 characters, trimming should be done by the backend._\n    ```\n    ?options={previewText: {length:200, trimApi: true}} \n    ```\n    **Example:** _Preview Text configured to first look up content type `plain`, then content type `html` to generate the previewText:_\n    ```\n    ?options={previewText: {plain: {length: 200, trimApi: true, precedence: true}}, {html: {length: 200, trimApi: true}} \n    ``` \n    \n    If `plain` and `html` are omitted, the options configured for `previewText` should be internally get applied to both content types.\n    **Default**: The `previewText`s default setting should be, if nothing else specified:\n    ```json\n      previewText: {\n        plain: {\n            precedence: true,\n            length: 200,\n            trimApi: true\n        },\n        html: {\n            length: 200,\n            trimApi: true\n        }\n    }\n    ```\n    \n##### Ignored Options\nif a field is excluded, any value found in `options` referring to it will be ignored.",
+        "description": "Returns a list of all available `MessageItem`s for the `MailFolder` identified by `mailFolderId` belonging to the `MailAccount` identified by `mailAccountId` for the requesting client. \nThe list of `MessageItem`s returned is in the boundaries of `start` and `start + limit`; meta-information in the response need to contain the total number of `MessageItems` the owning `Mailfolder` contains. \n\n### Query Parameters\n\n\n### `limit`\nA client must explicitly set `limit` to -1 if **ALL** items should be returned. `limit` is only considered if no filter with the property `id` is found.\n\n### Sparse Fieldset with `fields[MessageItem]`\n\nAllows to define the attributes to return with a `MessageItem`. Defaults to `*` which means all attributes of a `MessageItem` are included.\nTo exclude attributes, append a comma-separated list with the names of attributes to exclude:\n\n**Example:** _All attributes are included (default)_\n```\n?fields[MessageItem]=* \n```\n\n**Example:** _Only `previewText` will be included in the set of attributes_\n```\n?fields[MessageItem]=previewText \n```\n\n**Example:** _`subject` and `previewText` will not be included in the set of attributes_\n```\n?fields[MessageItem]=*,previewText,subject \n```\n\n### Include Folder Data with `include` \n\nTo include the data of the owning `MailFolder`, use the query parameter `include` set to `MailFolders`. \n**Example:**\n```\n?include=MailFolders\n```\n\n### Sparse Fieldset of Folder Data with `fields[MailFolder]` \nAllows to define the attributes to return with a related `MailFolder`. To only return the fields `unread` and `total`, add the query parameter `fields[MailFolder]` set to `unread,total`.\n**Example:**\n```\n?include=MailFolders&fields[MailFolder]=unread,total\n```\n\n  \n  \n### `filter`\n\nA **json-encoded** string providing additional filter to consider. Must be an array of filter-objects. Multiple filter objects are considered as logical `OR` conditionals.\nIf the server does not understand the filter, a 400-response **MUST** be returned.\nTo group `filter` as logical `AND`, use Arrays of Arrays.\n\n\n#### Filter configuration\n- `property`\n    <br>The `property`-key **SHOULD** be an attribute the server understands.\n- `value`\n    <br>The `value`-key **SHOULD** be a a value for the `property`. The format is arbitrary.\n- `operator`\n    <br>The `operator`-key **SHOULD** be the operator that is used for comparing a list of data with the `property`s `value`. The default operator used is `=`\n         <br>(The following examples use json-decoded data for demonstration purposes.)\n         <br>\n    **Example:** _Getting messages flagged as `recent`._\n    ```\n    ?filter=[{\"property\": \"recent\", \"value\": true}]\n    ```\n    **Example:** _Getting messages flagged as `recent`, **OR** messages flagged as `unseen` with an `id` greater than 1657._\n    ```\n    ?filter=[{\"property\": \"recent\", \"value\": true}, [{\"property\": \"unseen\", \"value\": true}, {\"property\": \"id\", \"value\": 1657, \"operator\": \">\"}]]\n    ```\n    **Example:** _Getting only a specific set of messages based on their `id`s:\n    ```\n    ?filter=[{\"property\": \"id\", \"value\": [\"89678\", \"45\", \"98798\"], \"operator\": \"in\"}]\n    ```\n\n\n\n### `options`\n\nA **json-encoded** string providing additional options for the attributes.\n\n- `previewText`\n    <br>The `previewText`-attribute **MUST** be allowed to be configured with:\n           <br> - `length` this allows to specify the length of the `previewText` to return\n    <br>The `previewText`-attribute **MUST NOT**, but **SHOULD**,  be allowed to be configured with:\n           <br> - `trimApi` if `length` is specified, `trimApi` requests the implementing backend to read out the complete text before trimming it. This can prevent charset decoding issues, but increases load-times (defaults to `false`).\n           <br> apply options to `html`/`plain`: If the backend supports it, the client should be able to chose which content type of the message should be previewed. The option `precedence` should be submitted to tell which content type should be preferred. A lookup for the other content type is then skipped. \n           <br>(The following examples use json-decoded data for demonstration purposes.)\n    \n    **Example:** _Preview Text is returned with a max. of 200 characters._\n    ```\n    ?options={previewText: {length:200}} \n    ```\n    **Example:** _Preview Text is returned with a max. of 200 characters, trimming should be done by the backend._\n    ```\n    ?options={previewText: {length:200, trimApi: true}} \n    ```\n    **Example:** _Preview Text configured to first look up content type `plain`, then content type `html` to generate the previewText:_\n    ```\n    ?options={previewText: {plain: {length: 200, trimApi: true, precedence: true}}, {html: {length: 200, trimApi: true}} \n    ``` \n    \n    If `plain` and `html` are omitted, the options configured for `previewText` should be internally get applied to both content types.\n    **Default**: The `previewText`s default setting should be, if nothing else specified:\n    ```json\n      previewText: {\n        plain: {\n            precedence: true,\n            length: 200,\n            trimApi: true\n        },\n        html: {\n            length: 200,\n            trimApi: true\n        }\n    }\n    ```\n    \n##### Ignored Options\nif a field is excluded, any value found in `options` referring to it will be ignored.",
         "operationId": "getMessageItems",
         "parameters": [
           {
@@ -154,11 +154,12 @@
           },
           {
             "schema": {
-              "type": "string"
+              "type": "string",
+              "example": "fields[MessageItem]=*,previewText"
             },
             "in": "query",
-            "name": "attributes",
-            "description": "The list of attributes to include or exclude for the message item. * retrieves all, * followed by attribute names excludes the specified attributes. Attributes only w/o * returns only the specified attributes."
+            "name": "fields[MessageItems]",
+            "description": "A comma separated list of fields of this entity to include in the response"
           },
           {
             "schema": {
@@ -178,6 +179,23 @@
             "in": "query",
             "name": "filter",
             "description": "A json encoded array of filter objects to send to the server. "
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "include",
+            "description": "A comma-separated list of resources related to the primary resource that should be included with the response"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "example": "fields[MailFolder]=unreadMessages,totalMessages"
+            },
+            "in": "query",
+            "name": "fields[MailFolder]",
+            "description": "A comma separated list of fields of this entity to include in the response"
           }
         ],
         "responses": {
@@ -278,19 +296,16 @@
             }
           },
           "400": {
-            "description": "Bad Request - the client sent a request the API could not understand"
+            "$ref": "#/components/responses/400-BadRequest"
           },
           "401": {
-            "description": "Unauthorized - the client is not authenticated."
+            "$ref": "#/components/responses/401-Unauthorized"
           },
           "403": {
-            "description": "Forbidden - the resource may not be accessed by the client."
+            "$ref": "#/components/responses/403-Forbidden"
           },
           "404": {
-            "description": "Not Found - if the MessageItem with the specified messageItemId does not exist."
-          },
-          "500": {
-            "description": "Internal Server Error - if the implementing API encountered an internal error."
+            "$ref": "#/components/responses/404-NotFound"
           }
         }
       },
@@ -1925,13 +1940,13 @@
           }
         }
       },
-      "ErrorObject": {
-        "title": "Error Object",
+      "ProblemObject": {
+        "title": "Problem Object",
         "x-stoplight": {
           "id": "tshdi3r02p0cj"
         },
         "type": "object",
-        "description": "Response Object representatives according to [rfc7807](https://datatracker.ietf.org/doc/html/rfc7807). The Problem representative is being transformed to the structure of an Error Object according to the [JSON:API's Error Object specifications](https://jsonapi.org/format/#errors).\n\n\n## Available fields\n\n### `status`\n - Type : `int`\n \nThe HTTP status code ([RFC7231], Section 6) generated by the origin server for this occurrence of the problem.\n \n ### `title`\n -  Type: `string`\n \nA short, human-readable summary of the problem type.  It SHOULD NOT change from occurrence to occurrence of the problem, except for purposes of localization (e.g., using proactive content negotiation; see [RFC7231], Section 3.4)\n \n ### `detail`\n - Type: `string`\n \n A human-readable explanation specific to this occurrence of the problem.\n\n### `meta.instance`\n - Type: `string`\n \nA URI reference that identifies the specific occurrence of the problem.  It may or may not yield further information if dereferenced.\n\n### `links.about`\n - Type: `string`\n\nA URI reference [RFC3986] that identifies the problem type.  This specification encourages that, when dereferenced, it provide human-readable documentation for the problem type (e.g., using HTML [W3C.REC-html5-20141028]).  When this member is not present, its value is assumed to be \"about:blank\".",
+        "description": "Problem Object representatives according to [rfc7807](https://datatracker.ietf.org/doc/html/rfc7807). The Problem representative is being available in the structure of an Error Object according to the [JSON:API's Error Object specifications](https://jsonapi.org/format/#errors).\n\n\n## Available fields\n\n### `status`\n - Type : `int`\n \nThe HTTP status code ([RFC7231], Section 6) generated by the origin server for this occurrence of the problem.\n \n ### `title`\n -  Type: `string`\n \nA short, human-readable summary of the problem type.  It SHOULD NOT change from occurrence to occurrence of the problem, except for purposes of localization (e.g., using proactive content negotiation; see [RFC7231], Section 3.4)\n \n ### `detail`\n - Type: `string`\n \n A human-readable explanation specific to this occurrence of the problem.\n\n### `meta`\n - Type: `object`\n\n`meta` is an object that may contain the field `instance`, a URI reference that identifies the specific occurrence of the problem.  It may or may not yield further information if dereferenced.\n\n### `links`\n - Type: `object`\n\n`links` is an object that may contain the field `about`, a URI reference [RFC3986] that identifies the problem type.  This specification encourages that, when dereferenced, it provide human-readable documentation for the problem type (e.g., using HTML [W3C.REC-html5-20141028]).  When this member is not present, its value is assumed to be \"about:blank\".",
         "properties": {
           "title": {
             "type": "string"
@@ -1960,6 +1975,22 @@
           }
         },
         "x-examples": {}
+      },
+      "ErrorObject": {
+        "title": "Error Object",
+        "x-stoplight": {
+          "id": "8sfbzi93abura"
+        },
+        "type": "object",
+        "description": "## Available fields\nThe response contains [`Problems`](https://datatracker.ietf.org/doc/html/rfc7807) transformed to [`Error Objects`](https://jsonapi.org/format/#errors) according to [JSON:API](https://jsonapi.org) specifications. Each object provides additional information about problems encountered while performing an operation. \n\n### `errors`\n\n- Type: `array`\n\nThe errors object contains one error object or a list of errors that where encountered during the operation, whereas the first entry should be the most recently encountered error during the operation, and the last entry should be the least recently encountered error.",
+        "properties": {
+          "errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProblemObject"
+            }
+          }
+        }
       }
     },
     "securitySchemes": {
@@ -1969,6 +2000,26 @@
       }
     },
     "responses": {
+      "404-NotFound": {
+        "description": "# 404 Not Found\n\nThe server cannot find the requested resource.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorObject"
+            }
+          }
+        }
+      },
+      "401-Unauthorized": {
+        "description": "# 401 Unauthorized\n\nThe client lacks valid authentication credentials to access the resource.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorObject"
+            }
+          }
+        }
+      },
       "putMessageItemResponse": {
         "description": "Example response",
         "content": {
@@ -2011,18 +2062,24 @@
           }
         }
       },
-      "ErrorResponse": {
-        "description": "A response containing [`Problems`](https://datatracker.ietf.org/doc/html/rfc7807) transformed to [`Error Objects`](https://jsonapi.org/format/#errors) according to [JSON:API](https://jsonapi.org) specifications. Each object provides additional information about problems encountered while performing an operation. \n\n\n## Available fields\n\n### `status`\n - Type : `int`\n \nThe HTTP status code ([RFC7231], Section 6) generated by the origin server for this occurrence of the problem.\n \n ### `title`\n -  Type: `string`\n \nA short, human-readable summary of the problem type.  It SHOULD NOT change from occurrence to occurrence of the problem, except for purposes of localization (e.g., using proactive content negotiation; see [RFC7231], Section 3.4)\n \n ### `detail`\n - Type: `string`\n \n A human-readable explanation specific to this occurrence of the problem.\n\n### `meta.instance`\n - Type: `string`\n \nA URI reference that identifies the specific occurrence of the problem.  It may or may not yield further information if dereferenced.\n\n### `links.about`\n - Type: `string`\n\nA URI reference [RFC3986] that identifies the problem type.  This specification encourages that, when dereferenced, it provide human-readable documentation for the problem type (e.g., using HTML [W3C.REC-html5-20141028]).  When this member is not present, its value is assumed to be \"about:blank\".",
+      "400-BadRequest": {
+        "description": "# 400 Bad Request\n\nThe server cannot or will not process the request due something that is perceived to be a client error, e.g. a malformed request syntax.",
         "content": {
           "application/json": {
             "schema": {
-              "type": "object",
+              "$ref": "#/components/schemas/ErrorObject"
+            }
+          }
+        }
+      },
+      "403-Forbidden": {
+        "description": "# 403 Forbidden\n\nThe client is authenticated, but the server refuses to authorize access to the requested resource.",
+        "content": {
+          "application/json": {
+            "schema": {
               "properties": {
-                "errors": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ErrorObject"
-                  }
+                "id": {
+                  "type": "string"
                 }
               }
             }
