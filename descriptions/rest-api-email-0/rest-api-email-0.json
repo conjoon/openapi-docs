@@ -200,7 +200,7 @@
         ],
         "responses": {
           "200": {
-            "description": "A list of ListMessageItems. ",
+            "description": "A list of MessageItems. ",
             "content": {
               "application/json": {
                 "schema": {
@@ -215,7 +215,7 @@
                   }
                 },
                 "examples": {
-                  "/MailAccounts/gmail/MailFolders/INBOX/MessageItems?include=MailFolders&fields[MailFolder]=unread,total": {
+                  "?include=MailFolders&fields[MessageItem]=*,previewText&fields[MailFolder]=unreadMessages,totalMessages": {
                     "value": {
                       "data": [
                         {
@@ -258,11 +258,10 @@
                             "references": "string",
                             "messageId": "string",
                             "size": 0,
-                            "hasAttachments": true,
-                            "previewText": "string"
+                            "hasAttachments": true
                           },
                           "relationships:": {
-                            "MailFolder": {
+                            "MailFolders": {
                               "data": {
                                 "id": "INBOX",
                                 "type": "MailFolder"
@@ -276,8 +275,8 @@
                           "id": "INBOX",
                           "type": "MailFolder",
                           "attributes": {
-                            "unread": 12,
-                            "total": 40
+                            "unreadMessages": 12,
+                            "totalMessages": 40
                           },
                           "relationships": {
                             "MailAccounts": {
