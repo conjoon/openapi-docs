@@ -1661,7 +1661,7 @@
       "MessageItem_ResourceObject_incl": {
         "allOf": [
           {
-            "$ref": "#/components/schemas/MessageItem_ResourceIdentifier"
+            "$ref": "#/components/schemas/MessageItem_ResourceObject"
           },
           {
             "type": "object",
