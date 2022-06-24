@@ -313,7 +313,7 @@
           "MessageDraft"
         ],
         "summary": "Create a new message",
-        "description": "Creates a new `MessageItem` and implicitly makes a `MessageBody` available with this resource. The data is stored in the `MailFolder` for the `MailAccount`, both specified in the path parameter.\n\n## JSON-Body \n\n### `data.type`-field\nThe body needs to contain the `type`-field set to `MessageItem`\n\n### `data.relationships`\nThis field is expected to contain a resource identifier for the owning `MailFolder`, and must be provided as a resource object in `meta.included`.\n\n### `meta.included`\nAn array containing the resource object mentioned in `data.relationships`, along with a resource identifier to the owning `MailAccount`.\n\n## Query parameters\n\n### Include Folder Data with `include` \n\nTo include the data of the owning `MailFolder` with the response, use the query parameter `include` set to `MailFolder`. \n**Example:**\n```\n?include=MailFolder\n```\n\n#### Sparse Fieldset of Folder Data with `fields[MailFolder]` \nAllows to define the attributes to return with a related `MailFolder`. To only return the fields `unreadMessages` and `totalMessages`, add the query parameter `fields[MailFolder]` set to `unreadMessages,totalMessages`.\n**Example:**\n```\n?include=MailFolder&fields[MailFolder]=unreadMessages,totalMessages\n```\nFor creating a new `MessageBody`, providing an empty value for `fields[MailFolder]` is suggested. This will only return the relationship data along with the relationship information for the owning `MailAccount`.\n\n```\n?include=MailFolder&fields[MailFolder]=\n```\n\n## A note on error responses\nFor creating a new message, the server **MUST** compare the data found in the `relationships` and `included` fields against the data available with the path parameters. A `400 Bad Request` **MUST** be returned by the server if the data found therin is not euqlly the same. ",
+        "description": "Creates a new `MessageItem` and implicitly makes a `MessageBody` available with this resource. The data is stored in the `MailFolder` for the `MailAccount`, both specified in the path parameter.\n\n## JSON-Body \n\n### `data.type`-field\nThe body needs to contain the `type`-field, set to `MessageItem`\n\n## Query parameters\n\n### Include Folder Data with `include` \n\nTo include the data of the owning `MailFolder` with the response, use the query parameter `include` set to `MailFolder`. \n**Example:**\n```\n?include=MailFolder\n```\n\n#### Sparse Fieldset of Folder Data with `fields[MailFolder]` \nAllows to define the attributes to return with a related `MailFolder`. To only return the fields `unreadMessages` and `totalMessages`, add the query parameter `fields[MailFolder]` set to `unreadMessages,totalMessages`.\n**Example:**\n```\n?include=MailFolder&fields[MailFolder]=unreadMessages,totalMessages\n```\nFor creating a new `MessageBody`, providing an empty value for `fields[MailFolder]` is suggested. This will only return the relationship data along with the relationship information for the owning `MailAccount`.\n\n```\n?include=MailFolder&fields[MailFolder]=\n```",
         "operationId": "postMessageDraft",
         "parameters": [
           {
@@ -389,18 +389,7 @@
                 "type": "object",
                 "properties": {
                   "data": {
-                    "$ref": "#/components/schemas/MessageItem_ResourceObject_incl"
-                  },
-                  "meta": {
-                    "type": "object",
-                    "properties": {
-                      "included": {
-                        "type": "array",
-                        "items": {
-                          "$ref": "#/components/schemas/MailFolder_ResourceObject_incl"
-                        }
-                      }
-                    }
+                    "$ref": "#/components/schemas/MessageItem_ResourceObject"
                   }
                 }
               },
@@ -1871,7 +1860,11 @@
             "default": "MessageItem",
             "readOnly": true
           }
-        }
+        },
+        "required": [
+          "id",
+          "type"
+        ]
       },
       "MessageBody_ResourceIdentifier": {
         "title": "MessageBody_ResourceIdentifier",
