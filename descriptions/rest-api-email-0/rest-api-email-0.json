@@ -854,7 +854,7 @@
         "operationId": "sendMessage",
         "responses": {
           "200": {
-            "description": "The message was successfully sent.",
+            "description": "The message was sent.",
             "content": {
               "application/json": {
                 "schema": {
@@ -881,7 +881,7 @@
             "$ref": "#/components/responses/404-NotFound"
           },
           "405": {
-            "description": "Method Not Allowed - If the Message is not flagged as `DRAFT`"
+            "$ref": "#/components/responses/405-MethodNotAllowed"
           }
         },
         "description": "Sends the message represented by the path parameters. \n\nThe message **MUST** be flagged as `DRAFT` in order for the operation to succeed. If the message is not a `DRAFT` message, a `405 Method not allowed` **MUST** be returned by the server.\n\nThis operation does not require any request body.\n\nSending a message means that a server-connection configured with the `MailAccount` was established and the data of the message was successfully assembled to meet the server's protocol-requirements for sending it. \n\nIf the response represents a successful operation, implementing clients **MAY** take care of deleting the sent message from its source folder and/or move/copy it to a new destination folder (e.g. _Sent_-folder), if applicable.\n\n### A note on proprietary protocol implementations\nImplementing clients must be aware that some backends treat sending of messages differently. For example, when connecting to a **Google Mail**-account, it is possible that **Google Mail** automatically labels the message as `Sent`.   ",
