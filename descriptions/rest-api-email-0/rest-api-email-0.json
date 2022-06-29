@@ -358,12 +358,21 @@
                   "type": "object",
                   "properties": {
                     "data": {
-                      "$ref": "#/components/schemas/MessageItem_ResourceObject_incl"
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "description": "The type of the entity that should be created with the POST operation\n"
+                        },
+                        "attributes": {
+                          "$ref": "#/components/schemas/MessageItem_attributes"
+                        }
+                      },
+                      "required": [
+                        "type"
+                      ]
                     }
-                  },
-                  "required": [
-                    "data"
-                  ]
+                  }
                 }
               }
             },
@@ -884,7 +893,7 @@
             "$ref": "#/components/responses/405-MethodNotAllowed"
           }
         },
-        "description": "Sends the message represented by the path parameters. \n\nThe message **MUST** be flagged as `DRAFT` in order for the operation to succeed. If the message is not a `DRAFT` message, a `405 Method not allowed` **MUST** be returned by the server.\n\nThis operation does not require any request body.\n\nSending a message means that a server-connection configured with the `MailAccount` was established and the data of the message was successfully assembled to meet the server's protocol-requirements for sending it. \n\nIf the response represents a successful operation, implementing clients **MAY** take care of deleting the sent message from its source folder and/or move/copy it to a new destination folder (e.g. _Sent_-folder), if applicable.\n\n### A note on proprietary protocol implementations\nImplementing clients must be aware that some backends treat sending of messages differently. For example, when connecting to a **Google Mail**-account, it is possible that **Google Mail** automatically labels the message as `Sent`.   ",
+        "description": "Sends the message represented by the path parameters. \n\nThe message **MUST** be flagged as `DRAFT` in order for the operation to succeed. If the message is not a `DRAFT` message, a `405 Method not allowed` **MUST** be returned by the server.\n\nThis operation does not require any request body.\n\nSending a message means that a server-connection configured with the `MailAccount` was established and the data of the message was successfully assembled to meet the server's protocol-requirements for sending it. \n\n",
         "tags": [
           "MessageItem"
         ],
@@ -1696,74 +1705,7 @@
             "type": "object",
             "properties": {
               "attributes": {
-                "type": "object",
-                "properties": {
-                  "from": {
-                    "$ref": "#/components/schemas/EmailAddress"
-                  },
-                  "to": {
-                    "type": "array",
-                    "items": {
-                      "$ref": "#/components/schemas/EmailAddress"
-                    }
-                  },
-                  "cc": {
-                    "type": "array",
-                    "items": {
-                      "$ref": "#/components/schemas/EmailAddress"
-                    }
-                  },
-                  "bcc": {
-                    "type": "array",
-                    "items": {
-                      "$ref": "#/components/schemas/EmailAddress"
-                    }
-                  },
-                  "replyTo": {
-                    "$ref": "#/components/schemas/EmailAddress"
-                  },
-                  "date": {
-                    "type": "string"
-                  },
-                  "subject": {
-                    "type": "string"
-                  },
-                  "seen": {
-                    "type": "boolean"
-                  },
-                  "answered": {
-                    "type": "boolean"
-                  },
-                  "draft": {
-                    "type": "boolean"
-                  },
-                  "flagged": {
-                    "type": "boolean"
-                  },
-                  "recent": {
-                    "type": "boolean",
-                    "readOnly": true
-                  },
-                  "references": {
-                    "type": "string"
-                  },
-                  "messageId": {
-                    "type": "string",
-                    "readOnly": true
-                  },
-                  "size": {
-                    "type": "integer",
-                    "readOnly": true
-                  },
-                  "hasAttachments": {
-                    "type": "boolean",
-                    "readOnly": true
-                  },
-                  "previewText": {
-                    "type": "string",
-                    "readOnly": true
-                  }
-                }
+                "$ref": "#/components/schemas/MessageItem_attributes"
               }
             }
           }
@@ -1771,6 +1713,79 @@
         "description": "Models envelope information of message items.\nProvides a Resource Linkage to the owning `MailFolder`.",
         "title": "MessageItem_ResourceObject",
         "x-examples": {}
+      },
+      "MessageItem_attributes": {
+        "description": "All attributes of a `MessageItem`, including default and optional ones.",
+        "title": "MessageItem_Attributes",
+        "x-examples": {},
+        "type": "object",
+        "properties": {
+          "from": {
+            "$ref": "#/components/schemas/EmailAddress"
+          },
+          "to": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EmailAddress"
+            }
+          },
+          "cc": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EmailAddress"
+            }
+          },
+          "bcc": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EmailAddress"
+            }
+          },
+          "replyTo": {
+            "$ref": "#/components/schemas/EmailAddress"
+          },
+          "date": {
+            "type": "string"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "seen": {
+            "type": "boolean"
+          },
+          "answered": {
+            "type": "boolean"
+          },
+          "draft": {
+            "type": "boolean"
+          },
+          "flagged": {
+            "type": "boolean"
+          },
+          "recent": {
+            "type": "boolean",
+            "readOnly": true
+          },
+          "references": {
+            "type": "string"
+          },
+          "messageId": {
+            "type": "string",
+            "readOnly": true
+          },
+          "size": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "hasAttachments": {
+            "type": "boolean",
+            "readOnly": true
+          },
+          "previewText": {
+            "type": "string",
+            "readOnly": true
+          }
+        }
       },
       "MessageItem_ResourceObject_incl": {
         "allOf": [
