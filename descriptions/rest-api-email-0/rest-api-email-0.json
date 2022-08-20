@@ -123,7 +123,7 @@
           "MessageItem"
         ],
         "summary": "Gets a collection of envelope information of messages",
-        "description": "Returns a `MessageItem` collection for the `MailFolder` identified by `mailFolderId` belonging to the `MailAccount` identified by `mailAccountId` for the requesting client. \n\n`unreadMessages` and `totalMessages` of the related `MailFolder` **MAY** be obtained by requesting a compound document that _includes_ the `MailFolders`-relationship data. \n\n## Pagination\nThe server **MUST** support offset pagination for this resource collection.\nThe collection returned by the server is based on the offsets determined by `page[start]` and `page[start] + page[limit]`. \n\n## Sorting \nThe server **MUST** be able to sort data for the following `MessageItem` fields: \n- `subject`\n- `to`\n- `from` \n- `date`\n- `size`\n\nIf the query parameter `sort` is not specified, the server should return the `MessageItem`s sorted after their `date` field, in `DESCENDING` order (i.e. newest items first).\n\n## Filtering\nThe server **MUST** support filtering for this resource collection.\n\n## `options`\nThe client **MAY** send an `options`-query parameter providing various processing informations of the requested fields for the server along with the request.\nThe server **MUST** at least understand the `options` available for the fields defined by the `MessageBody` resource object.",
+        "description": "Returns a `MessageItem` collection for the `MailFolder` identified by `mailFolderId` belonging to the `MailAccount` identified by `mailAccountId` for the requesting client. \n\n`unreadMessages` and `totalMessages` of the related `MailFolder` **MAY** be obtained by requesting a compound document that _includes_ the `MailFolders`-relationship data. \n\n## Pagination\nThe server **MUST** support offset pagination for this resource collection.\nThe collection returned by the server is based on the offsets determined by `page[start]` and `page[start] + page[limit]`. \n\n## Sorting \nThe server **MUST** be able to sort data for the following `MessageItem` fields: \n- `subject`\n- `to`\n- `from` \n- `date`\n- `size`\n\nIf the query parameter `sort` is not specified, the server should return the `MessageItem`s sorted after their `date` field, in `DESCENDING` order (i.e. newest items first).\n\n## Filtering\nThe server **MUST** support filtering for this resource collection.",
         "operationId": "getMessageItems",
         "parameters": [
           {
@@ -420,6 +420,193 @@
           },
           "description": ""
         }
+      },
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "mailAccountId",
+          "in": "path",
+          "required": true
+        },
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "mailFolderId",
+          "in": "path",
+          "required": true
+        }
+      ]
+    },
+    "/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId}/MessageBodies": {
+      "get": {
+        "summary": "Gets a collection of MessageBodies",
+        "description": "Returns a `MessageBody` collection for the `MailFolder` identified by `mailFolderId` belonging to the `MailAccount` identified by `mailAccountId` for the requesting client. \n\n## Filtering\nThe server **MUST** support filtering for this resource collection.\n\n## `options`\nThe client **MAY** send an `options`-query parameter providing various processing informations of the requested fields for the server along with the request.\n\nThe server **SHOULD** be able to process the following options send by the client:\n\n#### `options[textPlain][length]`\n - _Type_: `integer`\n The length of the `textPlain`-field (in case the client wants to present a preview of the field's contents).\n \n#### `options[textHtml][length]`\n - _Type_: `integer`\n The length of the `textHtml`-field (in case the client wants to present a preview of the field's contents).\n ",
+        "operationId": "getMessageItems",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/mailAccountId"
+          },
+          {
+            "$ref": "#/components/parameters/mailFolderId"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "example": "'[{\"property\": \"recent\", \"value\": true}]'"
+            },
+            "in": "query",
+            "name": "filter",
+            "description": "Filter information."
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "include",
+            "description": "A comma-separated list of resources related to the primary resource that should be included with the response"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "example": "fields[MailFolder]=unreadMessages,totalMessages"
+            },
+            "in": "query",
+            "name": "fields[MailFolder]",
+            "description": "A comma separated list of fields of this entity to include in the response"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "fields[MessageBody]",
+            "description": "A comma separated list of fields of this entity to include in the response"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "options",
+            "description": "A query parameter group for configuration of requested fields, where applicable."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of MessageBodies. ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/MessageBody_ResourceObject_incl"
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "?include=MailFolder&fields[MessageItem]=*,previewText&fields[MailFolder]=unreadMessages,totalMessages": {
+                    "value": {
+                      "data": [
+                        {
+                          "id": "string",
+                          "type": "MessageItem",
+                          "attributes": {
+                            "from": {
+                              "address": "string",
+                              "name": "string"
+                            },
+                            "to": [
+                              {
+                                "address": "string",
+                                "name": "string"
+                              }
+                            ],
+                            "cc": [
+                              {
+                                "address": "string",
+                                "name": "string"
+                              }
+                            ],
+                            "bcc": [
+                              {
+                                "address": "string",
+                                "name": "string"
+                              }
+                            ],
+                            "replyTo": {
+                              "address": "string",
+                              "name": "string"
+                            },
+                            "date": "string",
+                            "subject": "string",
+                            "seen": true,
+                            "answered": true,
+                            "draft": true,
+                            "flagged": true,
+                            "recent": true,
+                            "references": "string",
+                            "messageId": "string",
+                            "size": 0,
+                            "hasAttachments": true
+                          },
+                          "relationships:": {
+                            "MailFolder": {
+                              "data": {
+                                "id": "INBOX",
+                                "type": "MailFolder"
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "included": [
+                        {
+                          "id": "INBOX",
+                          "type": "MailFolder",
+                          "attributes": {
+                            "unreadMessages": 12,
+                            "totalMessages": 40
+                          },
+                          "relationships": {
+                            "MailAccount": {
+                              "data": {
+                                "id": "gmail",
+                                "type": "MailAccount"
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400-BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/401-Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/403-Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/404-NotFound"
+          }
+        },
+        "tags": [
+          "MessageBody"
+        ]
       },
       "parameters": [
         {
