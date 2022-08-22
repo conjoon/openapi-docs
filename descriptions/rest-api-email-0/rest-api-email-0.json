@@ -1903,7 +1903,7 @@
             }
           }
         ],
-        "description": "Models envelope information of message items.\nProvides a Resource Linkage to the owning `MailFolder`.",
+        "description": "Models envelope information of message items.\nProvides a Resource Linkage to the owning `MailFolder`.\n\nThe fields `cc`, `bcc` and `replyTo` are optional and **MUST** be rquested by the client if the resource object should contain the data.",
         "title": "MessageItem_ResourceObject",
         "x-examples": {}
       },
