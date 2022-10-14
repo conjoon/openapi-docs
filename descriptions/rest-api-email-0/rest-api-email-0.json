@@ -1908,7 +1908,7 @@
         "x-examples": {}
       },
       "MessageItem_attributes": {
-        "description": "All attributes of a `MessageItem`, including default and optional ones.\nThe fields `cc`, `bcc` and `replyTo` are not included by default and must be required using [sparse fieldsets](https://jsonapi.org/format/#fetching-sparse-fieldsets) or the [`relfield`-extension](https://conjoon.org/json-api/ext/relfield).",
+        "description": "All attributes of a `MessageItem`, including default and optional ones.\nThe fields `cc`, `bcc`, `replyTo` and `draftInfo` are not included by default and must be required using [sparse fieldsets](https://jsonapi.org/format/#fetching-sparse-fieldsets) or the [`relfield`-extension](https://conjoon.org/json-api/ext/relfield).",
         "title": "MessageItem_Attributes",
         "x-examples": {},
         "type": "object",
@@ -1973,6 +1973,10 @@
           "hasAttachments": {
             "type": "boolean",
             "readOnly": true
+          },
+          "draftInfo": {
+            "type": "string",
+            "description": "A string containing information about the email that is being referenced with this draf. This info can be used whenever a draft is sent to update the referenced draft, e.g. with a \"answered\"-flag. "
           }
         },
         "required": [
