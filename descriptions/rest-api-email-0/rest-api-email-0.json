@@ -71,11 +71,19 @@
           "MailFolders"
         ],
         "summary": "Lists mail boxes",
-        "description": "Returns a list of available mail boxes for the client and the `MailAccount`.",
+        "description": "Returns a list of available mail boxes for the client and the `MailAccount`. \n\n#### Mailbox Subscriptions\nMailboxes the client has subscribed to can be passed using the `filter`-query param. \n_Example:_\nThe client has subscribed to the mailboxes with the id `INBOX` and `[Gmail]`:\n\n```http\nGET MailAccounts/googlemail/MailFolders?filter={\"AND\":[{\"IN\":{\"id\":[\"INBOX\",\"[Gmail]\"]}}]} HTTP 1/1\n```",
         "operationId": "getMailFolders",
         "parameters": [
           {
             "$ref": "#/components/parameters/mailAccountId"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "filter",
+            "description": "filter param for additional filter information"
           }
         ],
         "responses": {
@@ -1803,15 +1811,16 @@
                   },
                   "outbox_secure": {
                     "type": "string"
+                  },
+                  "subscriptions": {
+                    "type": "string",
+                    "description": "A JSON stringified array containing the ids of the mailboxes this MailAccount is subscribed to"
                   }
                 }
               }
             }
           }
-        ],
-        "x-examples": {},
-        "title": "MailAccount (Resource Object)",
-        "description": "Resource Object representing a `MailAccount`."
+        ]
       },
       "MailFolder_ResourceObject": {
         "description": "Resource Object representing a `MailFolder`. Contains a Resource Linkage to the owning `MailAccount` in its `relationships` member.",
