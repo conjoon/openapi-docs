@@ -169,7 +169,8 @@
               "default": 0
             },
             "description": "The index of the first item to return.",
-            "allowEmptyValue": true
+            "allowEmptyValue": true,
+            "required": true
           },
           {
             "name": "page[limit]",
@@ -178,7 +179,8 @@
               "type": "integer",
               "minimum": -1
             },
-            "description": "The number of items to return. Returns all items if omitted."
+            "description": "The number of items to return. Returns all items if omitted.",
+            "required": true
           },
           {
             "name": "sort",
