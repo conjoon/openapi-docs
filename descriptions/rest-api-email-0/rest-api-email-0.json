@@ -64,6 +64,9 @@
           },
           "401": {
             "$ref": "#/components/responses/401-Unauthorized"
+          },
+          "500": {
+            "$ref": "#/components/responses/500-InternalServerError"
           }
         }
       }
@@ -74,7 +77,7 @@
           "MailFolders"
         ],
         "summary": "Lists mail folders",
-        "description": "Returns a list of available mail folders for the client and the `MailAccount`. \n\n### Mailbox Subscriptions\nMailboxes the client is interested in can be specified using the `filter`-query param. \n_Example:_\nThe client has subscribed to the mail folders with the id `INBOX` and `Personal Mail`:\n\n```http\nGET MailAccounts/googlemail/MailFolders?filter={\"IN\":{\"id\":[\"INBOX\",\"Personal Mail\"]}} HTTP 1/1\n```\n\nIf this filter is omitted, the server **MUST** respond with all mailboxes available for the specified `MailAccount`. \n\n## `options`\nThe client **MAY** send an `options`-query parameter providing various processing informations with the request.\n\nThe server **SHOULD** be able to process the following options send by the client:\n\n#### `options[MailFolder][dissolveNamespaces]`\n - _Type_: `String[]`\n A list of namespaces that should get dissolved by the server, affecting all mailboxes available with the specified\n `MailAccount`. If this option is provided, the server **SHOULD**\n ignore the specified namespaces when assembling a hierarchical tree structure of the mailboxes.\n\n##### Example\n\nGiven the following mailbox hierarchy\n\n ```\nINBOX\nINBOX.Drafts\nINBOX.Drafts.Revision\nINBOX.Drafts.Revision.TlDr\nINBOX.Drafts.Revision.SkipMe\nINBOX.Drafts.Revision.TlNs\nINBOX.Sent\n ```\n\nWhen setting `options[MailFolder][dissolveNamespaces]` to `[\"INBOX\"]`\n\n```http\nGET MailAccounts/googlemail/MailFolders?options[MailFolder]={\"dissolveNamespaces\": [\"INBOX\"]} HTTP 1/1\n```\n\nthe server **SHOULD** treat the assembling\nof the tree structure as if mailboxes were available\n in the following form:\n\n```\nINBOX\nDrafts\nDrafts.Revision\nDrafts.Revision.TlDr\nDrafts.Revision.SkipMe\nDrafts.Revision.TlNs\nSent\n```\n\nwhile providing the associated mailbox-ids as it, i.e., for the `MailFolder` `Drafts`, its id is still `INBOX.drafts`.\n\n##### `INBOX` treatment:\nThe `INBOX`-mailbox **SHOULD** serve as the root folder for incoming messages; as such, \nit is recommended to leave this namespace as is, except for the mailboxes that are direct\nsuccessors of this namepace.\n\nIf multiple equal mailbox names appear in one and the same level of a resulting tree stucture, it is up to the \nimplementing server to take action so the client can still distinguish between the mailboxes.",
+        "description": "Returns a list of available mail folders for the client and the `MailAccount`. \n\n### Mailbox Subscriptions\nMailboxes the client is interested in can be specified using the `filter`-query param. \n_Example:_\nThe client has subscribed to the mail folders with the id `INBOX` and `Personal Mail`:\n\n```http\nGET MailAccounts/googlemail/MailFolders?filter={\"IN\":{\"id\":[\"INBOX\",\"Personal Mail\"]}} HTTP 1/1\n```\n\nIf this filter is omitted, the server **MUST** respond with all mailboxes available for the specified `MailAccount`. \n\n## `options`\nThe client **MAY** send an `options`-query parameter providing various processing informations with the request.\n\nThe server **SHOULD** be able to process the following options send by the client:\n\n#### `options[MailFolder][dissolveNamespaces]`\n - _Type_: `String[]`\n A list of namespaces that should get dissolved by the server, affecting all mailboxes available with the specified\n `MailAccount`. If this option is provided, the server **SHOULD**\n ignore the specified namespaces when assembling a hierarchical tree structure of the mailboxes.\n\n##### Example\n\nGiven the following mailbox hierarchy\n\n ```\nINBOX\nINBOX.Drafts\nINBOX.Drafts.Revision\nINBOX.Drafts.Revision.TlDr\nINBOX.Drafts.Revision.SkipMe\nINBOX.Drafts.Revision.TlNs\nINBOX.Sent\n ```\n\nWhen setting `options[MailFolder][dissolveNamespaces]` to `[\"INBOX\"]`\n\n```http\nGET MailAccounts/googlemail/MailFolders?options[MailFolder]={\"dissolveNamespaces\": [\"INBOX\"]} HTTP 1/1\n```\n\nthe server **SHOULD** treat the assembling\nof the tree structure as if mailboxes were available\n in the following form:\n\n```\nINBOX\nDrafts\nDrafts.Revision\nDrafts.Revision.TlDr\nDrafts.Revision.SkipMe\nDrafts.Revision.TlNs\nSent\n```\n\nwhile providing the associated mailbox-ids as is, i.e., for the `MailFolder` `Drafts`, its id is still `INBOX.drafts`.\n\n##### `INBOX` treatment:\nThe `INBOX`-mailbox **SHOULD** serve as the root folder for incoming messages; as such, \nit is recommended to leave this namespace as is, except for the mailboxes that are direct\nsuccessors of this namepace.\n\nIf multiple equal mailbox names appear in one and the same level of a resulting tree stucture, it is up to the \nimplementing server to take action so the client can still distinguish between the mailboxes.",
         "operationId": "getMailFolders",
         "parameters": [
           {
@@ -93,7 +96,7 @@
               "type": "string"
             },
             "in": "query",
-            "name": "options",
+            "name": "options[MailFolder]",
             "description": "A query parameter group providing additional processing information."
           }
         ],
@@ -125,6 +128,9 @@
           },
           "404": {
             "$ref": "#/components/responses/404-NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/500-InternalServerError"
           }
         }
       },
@@ -145,7 +151,7 @@
           "MessageItem"
         ],
         "summary": "Gets a collection of envelope information of messages",
-        "description": "Returns a `MessageItem` collection for the `MailFolder` identified by `mailFolderId` belonging to the `MailAccount` identified by `mailAccountId` for the requesting client. \n\n`unreadMessages` and `totalMessages` of the related `MailFolder` **MAY** be obtained by requesting a compound document that _includes_ the `MailFolders`-relationship data. \n\n## Pagination\nThe server **MUST** support offset pagination for this resource collection.\nThe collection returned by the server is based on the offsets determined by `page[start]` and `page[start] + page[limit]`. \n\n## Sorting \nThe server **MUST** be able to sort data for the following `MessageItem` fields: \n- `subject`\n- `to`\n- `from` \n- `date`\n- `size`\n\nIf the query parameter `sort` is not specified, the server should return the `MessageItem`s sorted after their `date` field, in `DESCENDING` order (i.e. newest items first).\n\n## Filtering\nThe server **MUST** support filtering for this resource collection.",
+        "description": "Returns a `MessageItem` collection for the `MailFolder` identified by `mailFolderId` belonging to the `MailAccount` identified by `mailAccountId` for the requesting client. \n\n`unreadMessages` and `totalMessages` of the related `MailFolder` **MAY** be obtained by requesting a compound document that _includes_ the `MailFolders`-relationship data. \n\n## Pagination\nThe server **MUST** support offset pagination for this resource collection.\nThe collection returned by the server is based on the offsets determined by `page[start]` and `page[start] + page[limit]`. \n\n## Sorting \nThe server **MUST** be able to sort data for the following `MessageItem` fields: \n- `subject`\n- `to`\n- `from` \n- `date`\n- `size`\n\nIf the query parameter `sort` is not specified, the server should return the `MessageItem`s sorted after their `date` field, in `DESCENDING` order (i.e. newest items first).\n\n## Filtering\nThe server **MUST** support filtering for this resource collection.\n\n## Options\nThe client **MAY** send an `options`-query parameter providing various processing informations of the requested fields for the server along with the request.\n\nThe server **SHOULD** be able to process the following options send by the client:\n\n#### `options[MessageBody][textPlain][length]`\n - _Type_: `integer`\n The length of the `textPlain`-field (in case the client wants to present a preview of the field's contents).\n \n#### `options[MessageBody][textHtml][length]`\n - _Type_: `integer`\n The length of the `textHtml`-field (in case the client wants to present a preview of the field's contents).\n ",
         "operationId": "getMessageItems",
         "parameters": [
           {
@@ -187,7 +193,7 @@
           {
             "schema": {
               "type": "string",
-              "example": "fields[MessageItem]=*,previewText"
+              "example": "fields[MessageItem]=subject,previewText"
             },
             "in": "query",
             "name": "fields[MessageItem]",
@@ -232,8 +238,8 @@
               "type": "string"
             },
             "in": "query",
-            "name": "options",
-            "description": "A query parameter group for configuration of requested fields, where applicable."
+            "name": "options[MessageBody]",
+            "description": "A query parameter for configuration of requested fields, where applicable."
           }
         ],
         "responses": {
@@ -338,11 +344,11 @@
           "401": {
             "$ref": "#/components/responses/401-Unauthorized"
           },
-          "403": {
-            "$ref": "#/components/responses/403-Forbidden"
-          },
           "404": {
             "$ref": "#/components/responses/404-NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/500-InternalServerError"
           }
         }
       },
@@ -442,193 +448,6 @@
           },
           "description": ""
         }
-      },
-      "parameters": [
-        {
-          "schema": {
-            "type": "string"
-          },
-          "name": "mailAccountId",
-          "in": "path",
-          "required": true
-        },
-        {
-          "schema": {
-            "type": "string"
-          },
-          "name": "mailFolderId",
-          "in": "path",
-          "required": true
-        }
-      ]
-    },
-    "/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId}/MessageBodies": {
-      "get": {
-        "summary": "Gets a collection of MessageBodies",
-        "description": "Returns a `MessageBody` collection for the `MailFolder` identified by `mailFolderId` belonging to the `MailAccount` identified by `mailAccountId` for the requesting client. \n\n## Filtering\nThe server **MUST** support filtering for this resource collection.\n\n## `options`\nThe client **MAY** send an `options`-query parameter providing various processing informations of the requested fields for the server along with the request.\n\nThe server **SHOULD** be able to process the following options send by the client:\n\n#### `options[textPlain][length]`\n - _Type_: `integer`\n The length of the `textPlain`-field (in case the client wants to present a preview of the field's contents).\n \n#### `options[textHtml][length]`\n - _Type_: `integer`\n The length of the `textHtml`-field (in case the client wants to present a preview of the field's contents).\n ",
-        "operationId": "getMessageItems",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/mailAccountId"
-          },
-          {
-            "$ref": "#/components/parameters/mailFolderId"
-          },
-          {
-            "schema": {
-              "type": "string",
-              "example": "'[{\"property\": \"recent\", \"value\": true}]'"
-            },
-            "in": "query",
-            "name": "filter",
-            "description": "Filter information."
-          },
-          {
-            "schema": {
-              "type": "string"
-            },
-            "in": "query",
-            "name": "include",
-            "description": "A comma-separated list of resources related to the primary resource that should be included with the response"
-          },
-          {
-            "schema": {
-              "type": "string",
-              "example": "fields[MailFolder]=unreadMessages,totalMessages"
-            },
-            "in": "query",
-            "name": "fields[MailFolder]",
-            "description": "A comma separated list of fields of this entity to include in the response"
-          },
-          {
-            "schema": {
-              "type": "string"
-            },
-            "in": "query",
-            "name": "fields[MessageBody]",
-            "description": "A comma separated list of fields of this entity to include in the response"
-          },
-          {
-            "schema": {
-              "type": "string"
-            },
-            "in": "query",
-            "name": "options",
-            "description": "A query parameter group for configuration of requested fields, where applicable."
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "A list of MessageBodies. ",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/MessageBody_ResourceObject_incl"
-                      }
-                    }
-                  }
-                },
-                "examples": {
-                  "?include=MailFolder&fields[MessageItem]=*,previewText&fields[MailFolder]=unreadMessages,totalMessages": {
-                    "value": {
-                      "data": [
-                        {
-                          "id": "string",
-                          "type": "MessageItem",
-                          "attributes": {
-                            "from": {
-                              "address": "string",
-                              "name": "string"
-                            },
-                            "to": [
-                              {
-                                "address": "string",
-                                "name": "string"
-                              }
-                            ],
-                            "cc": [
-                              {
-                                "address": "string",
-                                "name": "string"
-                              }
-                            ],
-                            "bcc": [
-                              {
-                                "address": "string",
-                                "name": "string"
-                              }
-                            ],
-                            "replyTo": {
-                              "address": "string",
-                              "name": "string"
-                            },
-                            "date": "string",
-                            "subject": "string",
-                            "seen": true,
-                            "answered": true,
-                            "draft": true,
-                            "flagged": true,
-                            "recent": true,
-                            "references": "string",
-                            "messageId": "string",
-                            "size": 0,
-                            "hasAttachments": true
-                          },
-                          "relationships:": {
-                            "MailFolder": {
-                              "data": {
-                                "id": "INBOX",
-                                "type": "MailFolder"
-                              }
-                            }
-                          }
-                        }
-                      ],
-                      "included": [
-                        {
-                          "id": "INBOX",
-                          "type": "MailFolder",
-                          "attributes": {
-                            "unreadMessages": 12,
-                            "totalMessages": 40
-                          },
-                          "relationships": {
-                            "MailAccount": {
-                              "data": {
-                                "id": "gmail",
-                                "type": "MailAccount"
-                              }
-                            }
-                          }
-                        }
-                      ]
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/400-BadRequest"
-          },
-          "401": {
-            "$ref": "#/components/responses/401-Unauthorized"
-          },
-          "403": {
-            "$ref": "#/components/responses/403-Forbidden"
-          },
-          "404": {
-            "$ref": "#/components/responses/404-NotFound"
-          }
-        },
-        "tags": [
-          "MessageBody"
-        ]
       },
       "parameters": [
         {
@@ -2505,6 +2324,16 @@
       },
       "405-MethodNotAllowed": {
         "description": "# 405 Method not allowed\n\nIndicates that the server knows the request method, but the target resource does not support this method.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorObject"
+            }
+          }
+        }
+      },
+      "500-InternalServerError": {
+        "description": " # 500 Internal Server Error\r\n \r\n The server encountered an unexpected condition that prevented it from fulfilling the request.",
         "content": {
           "application/json": {
             "schema": {
