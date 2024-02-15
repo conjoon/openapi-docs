@@ -201,29 +201,11 @@
           },
           {
             "schema": {
-              "type": "string",
-              "example": "'[{\"property\": \"recent\", \"value\": true}]'"
-            },
-            "in": "query",
-            "name": "filter",
-            "description": "Filter information."
-          },
-          {
-            "schema": {
               "type": "string"
             },
             "in": "query",
             "name": "include",
             "description": "A comma-separated list of resources related to the primary resource that should be included with the response"
-          },
-          {
-            "schema": {
-              "type": "string",
-              "example": "fields[MailFolder]=unreadMessages,totalMessages"
-            },
-            "in": "query",
-            "name": "fields[MailFolder]",
-            "description": "A comma separated list of fields of this entity to include in the response"
           },
           {
             "schema": {
